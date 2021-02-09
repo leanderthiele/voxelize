@@ -22,7 +22,7 @@ add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr,
                           bool can_finish=false)
 {// {{{
     if (cpu_queue_item_ptr->is_full()
-        || (can_finish && cpu_queue_item_ptr->box_indices.size())
+        || (can_finish && cpu_queue_item_ptr->box_indices.size()))
     {
         #pragma omp critical(CPU_Queue_Critical)
         globals.cpu_queue.push(cpu_queue_item_ptr);
