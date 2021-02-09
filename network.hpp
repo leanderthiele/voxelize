@@ -7,7 +7,7 @@
 
 // TODO implement the network
 
-struct Net : public torch::nn::Module
+struct Net : torch::nn::Module
 {
     // number of floats in each item in a batch
     static constexpr size_t netw_item_size = 8;
