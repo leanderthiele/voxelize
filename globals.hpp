@@ -61,7 +61,11 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
     Nparticles { Nparticles_ }, box_N { box_N_ }, dim { dim_ }, box_L { box_L_ },
     box_a { box_L / (float)(box_N) },
     coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ }
-{ }
+{
+    #ifndef MULTI_ROOT
+    assert(Nthreads_root == 1);
+    #endif // MULTI_ROOT
+}
 
 
 #endif // GLOBALS_HPP

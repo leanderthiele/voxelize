@@ -35,10 +35,10 @@ check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr
     if (gpu_queue_item_ptr || can_finish)
     {
         // check if we have a sufficiently full batch to push it to the GPU queue,
-        // or this is the last batch
+        // or this is the last batch (and it has data)
         // Note the order of the ||, since in the second component we need to use
         // the gpu_queue_item_ptr which is uninitialized if can_finish==true.
-        if (can_finish ||
+        if ((can_finish && gpu_batch_queue_item_ptr->current_idx) ||
             gpu_batch_queue_item_ptr->is_full(gpu_queue_item_ptr->box_indices.size()))
         {
             #ifdef MULTI_ROOT

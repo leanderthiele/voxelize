@@ -18,9 +18,11 @@
 // them, because I don't know how to pass the names of the critical sections)
 
 static inline void
-add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr)
+add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr,
+                          bool can_finish=false)
 {// {{{
-    if (cpu_queue_item_ptr->is_full())
+    if (cpu_queue_item_ptr->is_full()
+        || (can_finish && cpu_queue_item_ptr->box_indices.size())
     {
         #pragma omp critical(CPU_Queue_Critical)
         globals.cpu_queue.push(cpu_queue_item_ptr);
@@ -30,9 +32,11 @@ add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr)
 }// }}}
 
 static inline void
-add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr)
+add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
+                          bool can_finish=false)
 {// {{{
-    if (gpu_queue_item_ptr->is_full())
+    if (gpu_queue_item_ptr->is_full()
+        || (can_finish && gpu_queue_item_ptr->box_indices.size())
     {
         #pragma omp critical(GPU_Queue_Critical)
         globals.gpu_queue.push(gpu_queue_item_ptr);
@@ -126,6 +130,11 @@ workers_process ()
                 }// for yy
             }// for xx
         }// for pp
+
+        // clean up if we have any unfinished data in our local buffers
+        add_to_cpu_queue_if_full(cpu_queue_item_ptr, true);
+        add_to_gpu_queue_if_full(gpu_queue_item_ptr, true);
+
     }// parallel
 
     // we are done and should let the root thread know
