@@ -55,7 +55,7 @@ mod_rotations (std::array<float,3> &cub)
 // }}}
 
 // four possible, qualitatively different cases
-enum trivial_case_e { non_trivial, sphere_in_cube, cube_in_sphere, no_intersect };
+enum class trivial_case_e { non_trivial, sphere_in_cube, cube_in_sphere, no_intersect };
 
 // helper functions for the if_trivial function below
 // {{{
@@ -109,21 +109,20 @@ is_trivial (const std::array<float,3> &cub, float R, float &vol)
     //        but this is probably not going to have much of an effect
     if (is_no_intersect(cub, R))
     {
-        vol = 0.0F;
-        return no_intersect;
+        return trivial_case_e::no_intersect;
     }
     else if (is_cube_in_sphere(cub, R))
     {
         vol = 1.0F;
-        return cube_in_sphere;
+        return trivial_case_e::cube_in_sphere;
     }
     else if (is_sphere_in_cube(cub, R))
     {
         vol = M_4PI_3f * R * R * R;
-        return sphere_in_cube;
+        return trivial_case_e::sphere_in_cube;
     }
     else
-        return non_trivial;
+        return trivial_case_e::non_trivial;
 }// }}}
 
 #ifdef TESTS
