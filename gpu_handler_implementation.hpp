@@ -17,25 +17,21 @@ gpu_handler::gpu_handler ()
     for (size_t ii=0; ii != Ngpu; ++ii)
         devices.push_back(std::make_shared<c10::Device>(c10::DeviceType::CUDA, ii));
 
-    // create a temporary buffer for the network
-    auto tmp_net = std::make_shared<Net>();
-
-    // load parameters from disk (using the buffer, we need to do disk I/O only once)
-    // In debugging mode, we give the possibility to not load a network from disk
-    #ifndef NDEBUG
-    if (globals.network_file != "NO_FILE")
-    #endif // NDEBUG
-    torch::load(tmp_net, globals.network_file);
-
-    // set to evaluation (as opposed to train) mode
-    tmp_net->eval();
-
     for (auto device : devices)
     {
-        // get a deep copy of the buffered network
-        // TODO apparently we need to somehow subclass from torch::nn::Cloneable
-        //      instead of torch::nn::Module for this to work
-        networks.push_back(std::make_shared<Net>(tmp_net->clone()));
+        // TODO this current solution requires disk I/O for each device,
+        //      but at the moment I can't figure out how the torch::Module::clone thing
+        //      works
+        networks.emplace_back(new Net);
+
+        // In debugging mode, we give the possibility to not load a network from disk
+        #ifndef NDEBUG
+        if (globals.network_file != "NO_FILE")
+        #endif // NDEBUG
+        torch::load(*networks.back(), globals.network_file);
+
+        // set to evaluation (as opposed to train) mode
+        networks.back()->eval();
 
         // push to the current device
         networks.back()->to(*device);
