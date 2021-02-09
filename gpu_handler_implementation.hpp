@@ -35,7 +35,7 @@ gpu_handler::gpu_handler ()
         // get a deep copy of the buffered network
         // TODO apparently we need to somehow subclass from torch::nn::Cloneable
         //      instead of torch::nn::Module for this to work
-        networks.emplace_back(tmp_net->clone());
+        networks.push_back(std::make_shared<Net>(tmp_net->clone()));
 
         // push to the current device
         networks.back()->to(*device);
