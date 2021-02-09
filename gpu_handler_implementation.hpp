@@ -28,7 +28,7 @@ gpu_handler::gpu_handler ()
         #ifndef NDEBUG
         if (globals.network_file != "NO_FILE")
         #endif // NDEBUG
-        torch::load(*networks.back(), globals.network_file);
+        torch::load(networks.back(), globals.network_file);
 
         // set to evaluation (as opposed to train) mode
         networks.back()->eval();
