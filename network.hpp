@@ -28,16 +28,17 @@ struct Net : torch::nn::Module
 
 // --- Implementation ---
 
-Net::Net ()
+Net::Net () :
+    fc { Nhidden+1, torch::nn::Linear{nullptr} }
 {
     for (size_t ii=0UL; ii != Nhidden+1UL; ++ii)
-        fc.push_back(register_module("fc" + std::to_string(ii),
-                                     torch::nn::Linear((ii==0UL)
-                                                       ? netw_item_size
-                                                       : Nneurons,
-                                                       (ii==Nhidden)
-                                                       ? 1
-                                                       : Nneurons)));
+        fc[ii] = register_module("fc" + std::to_string(ii),
+                                 torch::nn::Linear((ii==0UL)
+                                                   ? netw_item_size
+                                                   : Nneurons,
+                                                   (ii==Nhidden)
+                                                   ? 1
+                                                   : Nneurons));
     
     assert(fc.size() == Nhidden+1);
 }
