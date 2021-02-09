@@ -17,6 +17,10 @@ gpu_handler::gpu_handler (const std::string &network_file)
     for (size_t ii=0; ii != Ngpu; ++ii)
         devices.push_back(std::make_shared<c10::Device>(c10::DeviceType::CUDA, ii));
 
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : started loading network.\n");
+    #endif // NDEBUG
+
     for (auto device : devices)
     {
         // TODO this current solution requires disk I/O for each device,
@@ -37,6 +41,10 @@ gpu_handler::gpu_handler (const std::string &network_file)
         networks.back()->to(*device);
     }
     
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : finished loading network.\n");
+    #endif // NDEBUG
+
     #ifndef NDEBUG
     std::fprintf(stderr, "gpu_handler : started finding the streams.\n");
     #endif // NDEBUG
