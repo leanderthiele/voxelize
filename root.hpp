@@ -192,6 +192,10 @@ check_finish ()
 static void
 root_process ()
 {// {{{
+    #ifndef NDEBUG
+    std::fprintf("root_process : started ...\n");
+    #endif // NDEBUG
+
     #ifdef MULTI_ROOT
     omp_set_num_threads(globals.Nthreads_root);
     #endif // MULTI_ROOT
@@ -259,6 +263,10 @@ root_process ()
 
     #ifndef NDEBUG
     std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
+    #endif // NDEBUG
+
+    #ifndef NDEBUG
+    std::fprintf(stderr, "root_process : ended.\n");
     #endif // NDEBUG
 }// }}}
 
