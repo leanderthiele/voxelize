@@ -12,8 +12,11 @@
 #include <c10/cuda/CUDAStream.h>
 
 #include "queues.hpp"
+#include "queues_implementation.hpp"
 #include "globals.hpp"
 #include "network.hpp"
+#include "gpu_handler.hpp"
+#include "gpu_handler_implementation.hpp"
 
 static inline void
 check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr,

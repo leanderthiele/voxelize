@@ -11,6 +11,7 @@
 
 #include "geometry.hpp"
 #include "queues.hpp"
+#include "queues_implementation.hpp"
 #include "globals.hpp"
 
 // two smaller helper functions (unfortunately we don't seem to be able to template

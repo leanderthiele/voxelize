@@ -10,4 +10,4 @@ g++ -std=c++17 -Wall -Wextra -Wno-unused-parameter \
     -I${LIBTORCH}/include \
     voxelize_gpu.cpp \
     -L${LIBTORCH}/lib \
-    -ltorch -ltorch_cpu -ltorch_gpu -lc10 -fopenmp
+    -ltorch -ltorch_cpu -lc10 -fopenmp
