@@ -2,7 +2,7 @@
 
 export LIBTORCH=${HOME}/libtorch
 
-g++ -std=c++17 -O3 -Wall -Wextra -Wno-unused-parameter \
+g++ -std=c++17 -O0 -g3 -Wall -Wextra -Wno-unused-parameter \
     -D_GLIBCXX_USE_CXX11_ABI=0 \
     -DTESTS \
     -DMULTI_WORKERS \
