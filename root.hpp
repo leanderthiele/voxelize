@@ -193,7 +193,7 @@ static void
 root_process ()
 {// {{{
     #ifndef NDEBUG
-    std::fprintf("root_process : started ...\n");
+    std::fprintf(stderr, "root_process : started ...\n");
     #endif // NDEBUG
 
     #ifdef MULTI_ROOT
