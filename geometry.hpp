@@ -132,10 +132,11 @@ trivial_case_to_str (trivial_case_e x)
 {
     switch (x)
     {
-        case (non_trivial) : return "non_trivial";
-        case (sphere_in_cube) : return "sphere_in_cube";
-        case (cube_in_sphere) : return "cube_in_sphere";
-        case (no_intersect) : return "no_intersect";
+        case (trivial_case_e::non_trivial) : return "non_trivial";
+        case (trivial_case_e::sphere_in_cube) : return "sphere_in_cube";
+        case (trivial_case_e::cube_in_sphere) : return "cube_in_sphere";
+        case (trivial_case_e::no_intersect) : return "no_intersect";
+        default : return "unexpected!";
     }
 }
 
@@ -176,12 +177,12 @@ TEST_is_trivial (void)
 
             double expected_vol = Olap::overlap(Sph, Hex);
             trivial_case_e expected_output
-                = (expected_vol < 1e-15) ? no_intersect
-                  : (std::fabs(expected_vol-1.0) < 1e-15) ? cube_in_sphere
-                  : (std::fabs(expected_vol - M_4PI_3*R*R*R) < 1e-15) ? sphere_in_cube
-                  : non_trivial;
+                = (expected_vol < 1e-15) ? trivial_case_e::no_intersect
+                  : (std::fabs(expected_vol-1.0) < 1e-15) ? trivial_case_e::cube_in_sphere
+                  : (std::fabs(expected_vol - M_4PI_3*R*R*R) < 1e-15) ? trivial_case_e::sphere_in_cube
+                  : trivial_case_e::non_trivial;
 
-            ++Ncases[expected_output];
+            ++Ncases[(int)(expected_output)];
 
             std::array<float,3> cub {(float)cub0, (float)cub1, (float)cub2};
             mod_reflections(cub);

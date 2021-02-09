@@ -85,7 +85,9 @@ check_gpu_batch_queue ()
         {
             globals.gpu_process_list
                 .emplace_front(new gpu_process_item(gpu_batch_queue_item_ptr,
-                                                    stream_ptr));
+                                                    device_ptr,
+                                                    stream_ptr,
+                                                    network_ptr));
             globals.gpu_process_list.front()->compute();
         }
     }
