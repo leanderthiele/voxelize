@@ -18,7 +18,16 @@ struct Globals
         Nthreads_root,
         Nthreads_workers;
 
-    std::string network_file;
+    // function arguments
+    uint64_t Nparticles;
+    int64_t box_N,
+            dim;
+    float box_L,
+          box_a;
+    float *coords,
+          *radii,
+          *field,
+          *box;
 
     // gpu handling class
     gpu_handler gpu;
@@ -30,17 +39,6 @@ struct Globals
     // queues that are only accessed by the root thread
     gpu_batch_queue_t  gpu_batch_queue;
     gpu_process_list_t gpu_process_list;
-
-    // function arguments
-    uint64_t Nparticles;
-    int64_t box_N,
-            dim;
-    float box_L,
-          box_a;
-    float *coords,
-          *radii,
-          *field,
-          *box;
 
     Globals () = default;
 
@@ -57,10 +55,10 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
     Nthreads_tot { omp_get_max_threads() },
     Nthreads_root { 1 },
     Nthreads_workers { Nthreads_tot - Nthreads_root },
-    network_file(network_file_),
     Nparticles { Nparticles_ }, box_N { box_N_ }, dim { dim_ }, box_L { box_L_ },
     box_a { box_L / (float)(box_N) },
-    coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ }
+    coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ },
+    gpu { std::string(network_file_) }
 {
     #ifndef MULTI_ROOT
     assert(Nthreads_root == 1);

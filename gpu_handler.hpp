@@ -6,6 +6,11 @@
 #include <utility>
 #include <algorithm>
 #include <random>
+#include <string>
+
+#ifndef NDEBUG
+#   include <cstdio>
+#endif // NDEBUG
 
 #include <torch/torch.h>
 #include <c10/core/Device.h>
@@ -26,7 +31,9 @@ class gpu_handler
     std::vector<std::shared_ptr<Net>> networks;
 
 public :
-    gpu_handler ();
+    gpu_handler () = default;
+
+    gpu_handler (const std::string &network_file);
 
     // returns true if it was possible to find an idle stream
     bool get_resource (std::shared_ptr<Net> &network,

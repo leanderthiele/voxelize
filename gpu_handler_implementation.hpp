@@ -6,7 +6,7 @@
 
 // --- Implementation ---
 
-gpu_handler::gpu_handler ()
+gpu_handler::gpu_handler (const std::string &network_file)
 {// {{{
     assert(torch::cuda::is_available());
 
@@ -26,9 +26,9 @@ gpu_handler::gpu_handler ()
 
         // In debugging mode, we give the possibility to not load a network from disk
         #ifndef NDEBUG
-        if (globals.network_file != "NO_FILE")
+        if (network_file != "NO_FILE")
         #endif // NDEBUG
-        torch::load(networks.back(), globals.network_file);
+        torch::load(networks.back(), network_file);
 
         // set to evaluation (as opposed to train) mode
         networks.back()->eval();
@@ -37,6 +37,10 @@ gpu_handler::gpu_handler ()
         networks.back()->to(*device);
     }
     
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : started finding the streams.\n");
+    #endif // NDEBUG
+
     // get the streams
     streams.resize(Ngpu);
     for (size_t ii=0; ii != Ngpu; ++ii)
@@ -50,7 +54,16 @@ gpu_handler::gpu_handler ()
         while ((tmp_stream = c10::cuda::getStreamFromPool(false, ii))
                != *streams[ii][0])
             streams[ii].push_back(std::make_shared<c10::cuda::CUDAStream>(tmp_stream));
+
+        #ifndef NDEBUG
+        std::fprintf(stderr, "gpu_handler : Found %lu streams on device #%lu.\n",
+                             streams[ii].size(), ii);
+        #endif // NDEBUG
     }
+
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : finished finding the streams.\n");
+    #endif // NDEBUG
 }// }}}
 
 inline bool
