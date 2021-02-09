@@ -1,11 +1,13 @@
-LIBTORCH = /usr/local/libtorch
+#!/bin/sh
 
-g++ -std=c++17
-    -D_GLIBCXX_USE_CXX11_ABI=0
-    -DTESTS
-    -DMULTI_WORKERS
-    -I${LIBTORCH}/include/torch/csrc/api/include/
-    -I${LIBTORCH}/include
-    voxelize.cpp
-    -L${LIBTORCH}/lib
-    -ltorch -ltorch_cpu -ltorch_gpu -lc10
+export LIBTORCH=${HOME}/libtorch
+
+g++ -std=c++17 -Wall -Wextra -Wno-unused-parameter \
+    -D_GLIBCXX_USE_CXX11_ABI=0 \
+    -DTESTS \
+    -DMULTI_WORKERS \
+    -I${LIBTORCH}/include/torch/csrc/api/include/ \
+    -I${LIBTORCH}/include \
+    voxelize_gpu.cpp \
+    -L${LIBTORCH}/lib \
+    -ltorch -ltorch_cpu -ltorch_gpu -lc10 -fopenmp
