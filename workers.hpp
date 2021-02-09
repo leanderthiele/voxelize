@@ -36,7 +36,7 @@ add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
                           bool can_finish=false)
 {// {{{
     if (gpu_queue_item_ptr->is_full()
-        || (can_finish && gpu_queue_item_ptr->box_indices.size())
+        || (can_finish && gpu_queue_item_ptr->box_indices.size()))
     {
         #pragma omp critical(GPU_Queue_Critical)
         globals.gpu_queue.push(gpu_queue_item_ptr);
