@@ -1,6 +1,7 @@
 #ifndef QUEUES_IMPLEMENTATION_HPP
 #define QUEUES_IMPLEMENTATION_HPP
 
+#include "geometry.hpp"
 #include "queues.hpp"
 #include "globals.hpp"
 
@@ -25,7 +26,7 @@ gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const
         weights.push_back(weight[ii]);
 
     // add the volume normalization
-    vol_norm.push_back(std::min(M_4PI_3f*R*R*R, 1.0F));
+    vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // bring the cube into canonical form
     mod_rotations(cub);
@@ -60,7 +61,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
 
     // some debugging checks
     assert(Nitems != 0);
-    assert(gpu_result->gpu_tensor.size(0) >= Nitems);
+    assert(gpu_result->gpu_tensor.size(0) >= (int64_t)Nitems);
 
     #ifndef NDEBUG
     size_t Nitems1 = 0;
