@@ -14,16 +14,16 @@
 #endif // TESTS
 
 // 1/sqrt(2)
-#ifndef M_SQRT1_2f
-#   define M_SQRT1_2f 0.7071067811865475244008443621048490392848359376884740365883398689F
+#ifndef M_SQRT1_2f32
+#   define M_SQRT1_2f32 0.7071067811865475244008443621048490392848359376884740365883398689F
 #endif
 #ifndef M_SQRT1_2
 #   define M_SQRT1_2 0.7071067811865475244008443621048490392848359376884740365883398689
 #endif
 
 // 4pi/3
-#ifndef M_4PI_3f
-#   define M_4PI_3f 4.1887902047863909846168578443726705122628925325001410946332594564F
+#ifndef M_4PI_3f32
+#   define M_4PI_3f32 4.1887902047863909846168578443726705122628925325001410946332594564F
 #endif
 #ifndef M_4PI_3
 #   define M_4PI_3 4.1887902047863909846168578443726705122628925325001410946332594564
@@ -74,7 +74,7 @@ is_cube_in_sphere (const std::array<float,3> &cub, float R)
     // NOTE : we may be able to optimize this quite a bit by using
     //        quick, exclusive checks first and then only evaluating
     //        some of the std::hypot depending on signs.
-    return R >= M_SQRT1_2f
+    return R >= M_SQRT1_2f32
            && std::hypot(cub[0], cub[1], cub[2]) < R
            && std::hypot(cub[0]+1.0F, cub[1], cub[2]) < R
            && std::hypot(cub[0]+1.0F, cub[1]+1.0F, cub[2]) < R
@@ -118,7 +118,7 @@ is_trivial (const std::array<float,3> &cub, float R, float &vol)
     }
     else if (is_sphere_in_cube(cub, R))
     {
-        vol = M_4PI_3f * R * R * R;
+        vol = M_4PI_3f32 * R * R * R;
         return trivial_case_e::sphere_in_cube;
     }
     else

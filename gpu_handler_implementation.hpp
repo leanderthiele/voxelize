@@ -1,6 +1,7 @@
 #ifndef GPU_HANDLER_IMPLEMENTATION_HPP
 #define GPU_HANDLER_IMPLEMENTATION_HPP
 
+#include "c10/cuda/CUDAStream.h"
 #include "gpu_handler.hpp"
 #include "globals.hpp"
 
@@ -32,7 +33,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
         #ifndef NDEBUG
         if (network_file != "NO_FILE")
         #endif // NDEBUG
-        torch::load(networks.back(), network_file);
+            torch::load(networks.back(), network_file);
 
         // set to evaluation (as opposed to train) mode
         networks.back()->eval();
@@ -57,7 +58,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
 
         // store the first stream
         streams[ii].push_back(std::make_shared<c10::cuda::CUDAStream>(tmp_stream));
-        
+
         // loop until we find that we're given the initial stream again
         while ((tmp_stream = c10::cuda::getStreamFromPool(false, ii))
                != *streams[ii][0])
