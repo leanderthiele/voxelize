@@ -75,7 +75,7 @@ struct gpu_queue_item
 //        discarded afterwards
 struct gpu_batch_queue_item
 {// {{{
-    static constexpr size_t batch_size = 4096;
+    static constexpr size_t batch_size = 32768;
     static constexpr size_t netw_item_size = 8;
 
     size_t current_idx;

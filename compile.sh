@@ -3,7 +3,8 @@
 export TORCH=${HOME}/pytorch-install
 export CUDNN=/usr/local/cudnn/cuda-11.0/8.0.2
 
-g++ -std=c++17 -O0 -g3 -Wall -Wextra -Wno-unused-parameter \
+g++ -std=c++17 -O0 -g3 \
+    -Wall -Wextra -Wunused-result -Wno-unused-parameter \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
     -DTESTS \
     -DMULTI_ROOT \
