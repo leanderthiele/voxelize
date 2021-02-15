@@ -184,7 +184,13 @@ check_finish ()
 
     if (!gpu_queue_empty)
     {
-        std::fprintf(stderr, "workers finished but %lu items in gpu queue", 
+        // TODO
+        #ifdef MULTI_ROOT
+        #   pragma omp critical (GPU_Queue_Critical)
+        #endif // MULTI_ROOT
+        std::fprintf(stderr, "workers finished but %lu items in gpu queue\n", globals.gpu_queue.size());
+
+        return false;
     }
 
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
@@ -192,19 +198,45 @@ check_finish ()
     #endif // MULTI_ROOT, EXTRA_ROOT_ADD
     gpu_batch_queue_empty = globals.gpu_batch_queue.empty();
 
-    if (!gpu_batch_queue_empty) return false;
+    if (!gpu_batch_queue_empty)
+    {
+        // TODO
+        #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
+        #   pragma omp critical (GPU_Batch_Queue_Critical)
+        #endif // MULTI_ROOT || EXTRA_ROOT_ADD
+        std::fprintf(stderr, "workers finished but %lu items in gpu_batch_queue\n", globals.gpu_batch_queue.size());
+
+        return false;
+    }
 
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Process_List_Critical)
     #endif // MULTI_ROOT
     gpu_process_list_empty = globals.gpu_process_list.empty();
 
-    if (!gpu_process_list_empty) return false;
+    if (!gpu_process_list_empty)
+    {
+        // TODO
+        #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
+        #   pragma omp critical (GPU_Batch_Queue_Critical)
+        #endif
+        std::fprintf(stderr, "workers finished but items in gpu_process_list\n");
+
+        return false;
+    }
     
     #pragma omp critical (CPU_Queue_Critical)
     cpu_queue_empty = globals.cpu_queue.empty();
 
-    if (!cpu_queue_empty) return false;
+    if (!cpu_queue_empty)
+    {
+        #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
+        #   pragma omp critical (CPU_Queue_Critical)
+        #endif
+        std::fprintf(stderr, "workers finished but %lu items in cpu_queue\n", globals.cpu_queue.size());
+
+        return false;
+    }
 
     return true;
 }// }}}
