@@ -12,6 +12,11 @@ gpu_handler::gpu_handler (const std::string &network_file)
     assert(torch::cuda::is_available());
 
     Ngpu = torch::cuda::device_count();
+    
+    #ifndef NDEBUG
+    std::fprintf(stderr, "Found %lu GPUs.\n", Ngpu);
+    #endif // NDEBUG
+
     current_gpu = 0;
 
     // fill the devices

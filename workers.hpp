@@ -47,12 +47,18 @@ add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
 
 static void
 workers_process ()
-{
+{// {{{
     #ifndef NDEBUG
     std::fprintf(stderr, "workers_process : started ...\n");
     #endif // NDEBUG
 
+    #ifdef MULTI_WORKERS
     omp_set_num_threads(globals.Nthreads_workers);
+    #endif // MULTI_WORKERS
+
+    #ifndef NDEBUG
+    std::fprintf(stderr, "workers using %d threads.\n", globals.Nthreads_workers);
+    #endif // NDEBUG
 
     #ifndef NDEBUG
     uint64_t processed_numbers = 0UL;
@@ -151,6 +157,6 @@ workers_process ()
     #ifndef NDEBUG
     std::fprintf(stderr, "workers_process : ended.\n");
     #endif // NDEBUG
-}
+}// }}}
 
 #endif // WORKERS_HPP

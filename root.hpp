@@ -201,6 +201,10 @@ root_process ()
     #endif // MULTI_ROOT
 
     #ifndef NDEBUG
+    std::fprintf(stderr, "Using %d threads for root process.\n", globals.Nthreads_root);
+    #endif // NDEBUG
+
+    #ifndef NDEBUG
     uint64_t processed_numbers = 0UL;
     #endif // NDEBUG
 

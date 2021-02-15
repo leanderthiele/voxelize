@@ -54,7 +54,11 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
                   char *network_file_) :
     Nthreads_tot { omp_get_max_threads() },
     Nthreads_root { 1 },
+    #ifdef MULTI_WORKERS
     Nthreads_workers { Nthreads_tot - Nthreads_root },
+    #else // MULTI_WORKERS
+    Nthreads_workers { 1 };
+    #endif // MULTI_WORKERS
     Nparticles { Nparticles_ }, box_N { box_N_ }, dim { dim_ }, box_L { box_L_ },
     box_a { box_L / (float)(box_N) },
     coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ },
