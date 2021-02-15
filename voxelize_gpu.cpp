@@ -56,9 +56,9 @@ main ()
     auto box_L = ReadHDF5::read_header_attr_scalar<double,float>(fptr, "BoxSize");
     auto Nparticles = ReadHDF5::read_header_attr_vector<int32_t,size_t>(fptr, "NumPart_ThisFile", PartType);
 
-    float *coordinates = (float *)ReadHDF5::read_field(fptr, "Coordinates", sizeof(float), Nparticles, 3);
-    float *density = (float *)ReadHDF5::read_field(fptr, "Density", sizeof(float), Nparticles, 1);
-    float *masses = (float *)ReadHDF5::read_field(fptr, "Masses", sizeof(float), Nparticles, 1);
+    float *coordinates = (float *)ReadHDF5::read_field(fptr, "PartType0/Coordinates", sizeof(float), Nparticles, 3);
+    float *density = (float *)ReadHDF5::read_field(fptr, "PartType0/Density", sizeof(float), Nparticles, 1);
+    float *masses = (float *)ReadHDF5::read_field(fptr, "PartType0/Masses", sizeof(float), Nparticles, 1);
     float *radii = (float *)std::malloc(Nparticles * sizeof(float));
 
     for (size_t ii=0; ii != Nparticles; ++ii)

@@ -29,6 +29,9 @@
 #   define M_4PI_3 4.1887902047863909846168578443726705122628925325001410946332594564
 #endif
 
+// hypot function for old compilers
+#define HYPOT(x,y,z) std::hypot(x,y,z)
+
 // Simple functions to mod-out symmetries
 // {{{
 static inline void
@@ -73,22 +76,22 @@ is_cube_in_sphere (const std::array<float,3> &cub, float R)
 {
     // NOTE : we may be able to optimize this quite a bit by using
     //        quick, exclusive checks first and then only evaluating
-    //        some of the std::hypot depending on signs.
+    //        some of the HYPOT depending on signs.
     return R >= M_SQRT1_2f32
-           && std::hypot(cub[0], cub[1], cub[2]) < R
-           && std::hypot(cub[0]+1.0F, cub[1], cub[2]) < R
-           && std::hypot(cub[0]+1.0F, cub[1]+1.0F, cub[2]) < R
-           && std::hypot(cub[0]+1.0F, cub[1]+1.0F, cub[2]+1.0F) < R
-           && std::hypot(cub[0], cub[1]+1.0F, cub[2]) < R
-           && std::hypot(cub[0], cub[1]+1.0F, cub[2]+1.0F) < R
-           && std::hypot(cub[0], cub[1], cub[2]+1.0F) < R
-           && std::hypot(cub[0]+1.0F, cub[1], cub[2]+1.0F) < R;
+           && HYPOT(cub[0], cub[1], cub[2]) < R
+           && HYPOT(cub[0]+1.0F, cub[1], cub[2]) < R
+           && HYPOT(cub[0]+1.0F, cub[1]+1.0F, cub[2]) < R
+           && HYPOT(cub[0]+1.0F, cub[1]+1.0F, cub[2]+1.0F) < R
+           && HYPOT(cub[0], cub[1]+1.0F, cub[2]) < R
+           && HYPOT(cub[0], cub[1]+1.0F, cub[2]+1.0F) < R
+           && HYPOT(cub[0], cub[1], cub[2]+1.0F) < R
+           && HYPOT(cub[0]+1.0F, cub[1], cub[2]+1.0F) < R;
 }
 
 static inline bool
 is_no_intersect (const std::array<float,3> &cub, float R)
 {
-    return std::hypot(std::max(0.0F, cub[0]),
+    return HYPOT(std::max(0.0F, cub[0]),
                       std::max(0.0F, cub[1]),
                       std::max(0.0F, cub[2]) ) > R;
 }
