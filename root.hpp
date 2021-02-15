@@ -28,6 +28,11 @@ check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr
     if (!globals.gpu_queue.empty())
     {
         assert(!can_finish);
+
+        #ifndef NDEBUG
+        std::fprintf(stderr, "check_gpu_queue : found item\n");
+        #endif // NDEBUG
+
         gpu_queue_item_ptr = globals.gpu_queue.front();
         globals.gpu_queue.pop();
     }
@@ -66,6 +71,10 @@ check_gpu_batch_queue ()
     #endif // MULTI_ROOT
     if (!globals.gpu_batch_queue.empty())
     {
+        #ifndef NDEBUG
+        std::fprintf(stderr, "check_gpu_batch_queue : found item.\n");
+        #endif // NDEBUG
+
         gpu_batch_queue_item_ptr = globals.gpu_batch_queue.front();
         globals.gpu_batch_queue.pop();
     }
@@ -109,6 +118,10 @@ check_gpu_process_list ()
     for (auto x : globals.gpu_process_list)
         if (x->is_done())
         {
+            #ifndef NDEBUG
+            std::fprintf(stderr, "check_gpu_process_list : Found item.\n");
+            #endif // NDEBUG
+
             gpu_process_item_ptr = x;
             globals.gpu_process_list.remove(x);
             break;
@@ -138,6 +151,10 @@ check_cpu_queue ()
     #pragma omp critical (CPU_Queue_Critical)
     if (!globals.cpu_queue.empty())
     {
+        #ifndef NDEBUG
+        std::fprintf(stderr, "check_cpu_queue : Found item.\n");
+        #endif // NDEBUG
+
         cpu_queue_item_ptr = globals.cpu_queue.front();
         globals.cpu_queue.pop();
     }
