@@ -184,14 +184,14 @@ check_finish ()
 
     if (!gpu_queue_empty) return false;
 
-    #ifdef MULTI_ROOT
+    #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Batch_Queue_Critical)
-    #endif // MULTI_ROOT
+    #endif // MULTI_ROOT, EXTRA_ROOT_ADD
     gpu_batch_queue_empty = globals.gpu_batch_queue.empty();
 
     if (!gpu_batch_queue_empty) return false;
 
-    #ifdef MULTI_ROOT
+    #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Process_List_Critical)
     #endif // MULTI_ROOT
     gpu_process_list_empty = globals.gpu_process_list.empty();
@@ -207,26 +207,28 @@ check_finish ()
 }// }}}
 
 static void
-root_process ()
+root_gpu_process ()
 {// {{{
     #ifndef NDEBUG
-    std::fprintf(stderr, "root_process : started ...\n");
+    std::fprintf(stderr, "root_gpu_process : started ...\n");
     #endif // NDEBUG
 
     #ifdef MULTI_ROOT
-    omp_set_num_threads(globals.Nthreads_root);
+    omp_set_num_threads(globals.Nthreads_root_gpu);
     #endif // MULTI_ROOT
 
     #ifndef NDEBUG
-    std::fprintf(stderr, "Using %d threads for root process.\n", globals.Nthreads_root);
+    std::fprintf(stderr, "Using %d threads for root process.\n", globals.Nthreads_root_gpu);
     #endif // NDEBUG
 
+    #ifndef EXTRA_ROOT_ADD
     #ifndef NDEBUG
     uint64_t processed_numbers = 0UL;
     #endif // NDEBUG
+    #endif // EXTRA_ROOT_ADD
 
     #ifdef MULTI_ROOT
-    #   ifndef NDEBUG
+    #   if !defined(NDEBUG) && !defined(EXTRA_ROOT_ADD)
     #       pragma omp parallel \
                        shared(globals) \
                        default(none) \
@@ -235,7 +237,7 @@ root_process ()
     #       pragma omp parallel \
                        shared(globals) \
                        default(none)
-    #   endif // NDEBUG
+    #   endif // NDEBUG, EXTRA_ROOT_ADD
     #endif // MULTI_ROOT
     {
         // we need to keep one temporary across iterations, since a single batch
@@ -260,11 +262,13 @@ root_process ()
             check_gpu_process_list();
 
             // retreive some CPU work if available and perform it
+            #ifndef EXTRA_ROOT_ADD
             #ifndef NDEBUG
             check_cpu_queue(processed_numbers);
-            #else
+            #else // NDEBUG
             check_cpu_queue();
             #endif // NDEBUG
+            #endif // EXTRA_ROOT_ADD
 
             // it is important the the next two are in this order
             // After we realize that all queues are empty and the workers are done,
@@ -282,13 +286,49 @@ root_process ()
         }
     }
 
+    #ifndef EXTRA_ROOT_ADD
     #ifndef NDEBUG
     std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
     #endif // NDEBUG
+    #endif // EXTRA_ROOT_ADD
 
     #ifndef NDEBUG
-    std::fprintf(stderr, "root_process : ended.\n");
+    std::fprintf(stderr, "root_gpu_process : ended.\n");
     #endif // NDEBUG
 }// }}}
+
+#ifdef EXTRA_ROOT_ADD
+static void
+root_add_process ()
+{// {{{
+    #ifndef NDEBUG
+    std::fprintf(stderr, "root_add_process : started ...\n");
+    #endif // NDEBUG
+
+    #ifndef NDEBUG
+    uint64_t processed_numbers = 0UL;
+    #endif // NDEBUG
+
+    bool can_finish = false;
+
+    while (true)
+    {
+        #ifndef NDEBUG
+        check_cpu_queue(processed_numbers);
+        #else // NDEBUG
+        check_cpu_queue();
+        #endif // NDEBUG
+
+        if (can_finish && check_finish())
+            break;
+
+        can_finish = check_finish();
+    }
+
+    #ifndef NDEBUG
+    std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
+    #endif // NDEBUG
+}// }}}
+#endif // EXTRA_ROOT_ADD
 
 #endif // ROOT_HPP

@@ -31,7 +31,11 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
                       radii, field, box, network_file);
 
     // split into two threads: root and workers
+    #ifdef EXTRA_ROOT_ADD
+    omp_set_num_threads(3);
+    #else // EXTRA_ROOT_ADD
     omp_set_num_threads(2);
+    #endif // EXTRA_ROOT_ADD
 
     // allow nesting
     omp_set_nested(true);
@@ -39,7 +43,12 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     #pragma omp parallel sections
     {
         #pragma omp section
-        root_process();
+        root_gpu_process();
+
+        #ifdef EXTRA_ROOT_ADD
+        #pragma omp section
+        root_add_process();
+        #endif // EXTRA_ROOT_ADD
 
         #pragma omp section
         workers_process();

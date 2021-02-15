@@ -15,7 +15,8 @@ struct Globals
 
     // multithreading environment
     int Nthreads_tot,
-        Nthreads_root,
+        Nthreads_root_gpu,
+        Nthreads_root_add,
         Nthreads_workers;
 
     // function arguments
@@ -53,9 +54,10 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
                   float *coords_, float *radii_, float *field_, float *box_,
                   char *network_file_) :
     Nthreads_tot { omp_get_max_threads() },
-    Nthreads_root { 1 },
+    Nthreads_root_gpu { 1 },
+    Nthreads_root_add { 1 },
     #ifdef MULTI_WORKERS
-    Nthreads_workers { Nthreads_tot - Nthreads_root },
+    Nthreads_workers { Nthreads_tot - Nthreads_root_gpu - Nthreads_root_add },
     #else // MULTI_WORKERS
     Nthreads_workers { 1 },
     #endif // MULTI_WORKERS
@@ -65,7 +67,7 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
     gpu { std::string(network_file_) }
 {
     #ifndef MULTI_ROOT
-    assert(Nthreads_root == 1);
+    assert(Nthreads_root_gpu == 1);
     #endif // MULTI_ROOT
 }
 
