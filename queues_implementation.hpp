@@ -1,6 +1,10 @@
 #ifndef QUEUES_IMPLEMENTATION_HPP
 #define QUEUES_IMPLEMENTATION_HPP
 
+#ifndef NDEBUG
+#   include <cstdio>
+#endif
+
 #include "geometry.hpp"
 #include "queues.hpp"
 #include "globals.hpp"
@@ -160,13 +164,6 @@ gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
                 = gpu_input->network_inputs[ii*netw_item_size+jj];
 }// }}}
 
-inline void
-gpu_batch_queue_item::pass_through_net (std::shared_ptr<Net> network)
-{// {{{
-    gpu_tensor = network->forward(gpu_tensor);
-    gpu_tensor_accessor = gpu_tensor.accessor<float,2>();
-}// }}}
-
 gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                                     std::shared_ptr<c10::Device> device_,
                                     std::shared_ptr<c10::cuda::CUDAStream> stream_,
@@ -188,14 +185,18 @@ gpu_process_item::compute ()
 {// {{{
     assert(batch->gpu_tensor.is_pinned());
 
+    #ifndef NDEBUG
+    std::fprintf(stderr, "in gpu_process_item::compute(), trying to compute.\n");
+    #endif
+
     // establish a Stream context
     {
         at::cuda::CUDAMultiStreamGuard guard (*stream);
 
         // push the data to the GPU (non-blocking)
-        batch->gpu_tensor.to(*device, true);
+        batch->gpu_tensor = batch->gpu_tensor.to(*device, true);
 
-        batch->pass_through_net(network);
+        batch->gpu_tensor = network->forward(batch->gpu_tensor);
     }
 }// }}}
 
