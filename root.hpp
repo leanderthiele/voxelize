@@ -327,9 +327,9 @@ root_gpu_process ()
     #endif // NDEBUG
     #endif // EXTRA_ROOT_ADD
 
-    #ifndef NDEBUG
+//    #ifndef NDEBUG
     std::fprintf(stderr, "root_gpu_process : ended.\n");
-    #endif // NDEBUG
+//    #endif // NDEBUG
 }// }}}
 
 #ifdef EXTRA_ROOT_ADD
@@ -363,6 +363,11 @@ root_add_process ()
     #ifndef NDEBUG
     std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
     #endif // NDEBUG
+
+// TODO
+//    #ifndef NDEBUG
+    std::fprintf(stderr, "root_add_process : ended.\n");
+//    #endif // NDEBUG
 }// }}}
 #endif // EXTRA_ROOT_ADD
 
