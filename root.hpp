@@ -99,7 +99,7 @@ check_gpu_batch_queue ()
 static inline void
 check_gpu_process_list ()
 {// {{{
-    std::shared_ptr<gpu_process_item>   gpu_process_item_ptr;
+    std::shared_ptr<gpu_process_item> gpu_process_item_ptr;
     std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr;
 
     // check if we have finished gpu computations whose results we can push to the CPU queue

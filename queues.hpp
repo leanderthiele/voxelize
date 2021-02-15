@@ -89,8 +89,6 @@ struct gpu_batch_queue_item
     bool is_full (size_t to_add);
 
     void add (std::shared_ptr<gpu_queue_item> gpu_input);
-
-    void pass_through_net (std::shared_ptr<Net> network);
 };// }}}
 
 struct cpu_queue_item

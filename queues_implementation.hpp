@@ -92,7 +92,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     }
 
     // get the Tensor back to the CPU
-    gpu_result->gpu_tensor.to(torch::kCPU);
+    gpu_result->gpu_tensor = gpu_result->gpu_tensor.to(torch::kCPU);
     gpu_result->gpu_tensor_accessor = gpu_result->gpu_tensor.accessor<float,2>();
 
     // get the overlaps into this object
