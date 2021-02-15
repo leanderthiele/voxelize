@@ -13,6 +13,10 @@ struct Globals
     // computations
     bool workers_finished = false;
 
+    #ifdef EXTRA_ROOT_ADD
+    bool root_gpu_finished = false;
+    #endif // EXTRA_ROOT_ADD
+
     // multithreading environment
     int Nthreads_tot,
         Nthreads_root_gpu,

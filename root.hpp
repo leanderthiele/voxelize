@@ -330,6 +330,10 @@ root_gpu_process ()
 //    #ifndef NDEBUG
     std::fprintf(stderr, "root_gpu_process : ended.\n");
 //    #endif // NDEBUG
+    
+    #ifdef EXTRA_ROOT_ADD
+    globals.root_gpu_finished = true;
+    #endif // EXTRA_ROOT_ADD
 }// }}}
 
 #ifdef EXTRA_ROOT_ADD
@@ -344,7 +348,7 @@ root_add_process ()
     uint64_t processed_numbers = 0UL;
     #endif // NDEBUG
 
-    bool can_finish = false;
+    bool cpu_queue_empty;
 
     while (true)
     {
@@ -354,10 +358,11 @@ root_add_process ()
         check_cpu_queue();
         #endif // NDEBUG
 
-        if (can_finish && check_finish())
-            break;
+        #pragma omp critical(CPU_Queue_Critical)
+        cpu_queue_empty = globals.cpu_queue.empty();
 
-        can_finish = check_finish();
+        if (cpu_queue_empty && globals.root_gpu_finished)
+            break;
     }
 
     #ifndef NDEBUG
