@@ -182,7 +182,10 @@ check_finish ()
     #pragma omp critical (GPU_Queue_Critical)
     gpu_queue_empty = globals.gpu_queue.empty();
 
-    if (!gpu_queue_empty) return false;
+    if (!gpu_queue_empty)
+    {
+        std::fprintf(stderr, "workers finished but %lu items in gpu queue", 
+    }
 
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Batch_Queue_Critical)

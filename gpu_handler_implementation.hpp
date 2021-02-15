@@ -35,9 +35,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
         networks.emplace_back(new Net);
 
         // In debugging mode, we give the possibility to not load a network from disk
-        #ifndef NDEBUG
         if (network_file != "NO_FILE")
-        #endif // NDEBUG
             torch::load(networks.back(), network_file);
 
         // set to evaluation (as opposed to train) mode

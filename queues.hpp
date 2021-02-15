@@ -45,11 +45,11 @@ struct gpu_queue_item
 {// {{{
     // this is the approximate size we're aiming for
     // (some will be a bit larger, others a bit smaller)
-    static constexpr size_t approx_size = 100;
+    static constexpr size_t approx_size = 4000;
 
     // this is the size we'll allocate
     // Hopefully we'll rarely need re-allocs
-    static constexpr size_t reserv_size = 128;
+    static constexpr size_t reserv_size = 4096;
 
     // this is the network input size per item, later we'll probably define it somewhere else
     static constexpr size_t netw_item_size = 8;
@@ -94,8 +94,8 @@ struct gpu_batch_queue_item
 struct cpu_queue_item
 {// {{{
     // these are for construction with trivial results in the worker threads
-    static constexpr size_t approx_size = 100;
-    static constexpr size_t reserv_size = 128;
+    static constexpr size_t approx_size = 4000;
+    static constexpr size_t reserv_size = 4096;
 
     std::vector<int64_t> box_indices;
     std::vector<float>   weights;

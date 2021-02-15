@@ -21,10 +21,8 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
              char *network_file)
 {
     // TODO we can remove this later when we have a trained network
-    #ifndef NDEBUG
     char no_file_flag[] = "NO_FILE";
     network_file = no_file_flag;
-    #endif // NDEBUG
 
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,

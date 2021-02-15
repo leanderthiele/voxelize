@@ -65,7 +65,11 @@ workers_process ()
     #endif // NDEBUG
 
     #ifdef MULTI_WORKERS
-    #   pragma omp parallel reduction(+:processed_numbers)
+    #   ifndef NDEBUG
+    #       pragma omp parallel reduction(+:processed_numbers)
+    #   else // NDEBUG
+    #       pragma omp parallel
+    #   endif // NDEBUG
     #endif // MULTI_WORKERS
     {// parallel
         std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr { new cpu_queue_item };
