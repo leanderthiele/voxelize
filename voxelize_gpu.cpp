@@ -11,6 +11,7 @@
 #ifdef TESTS
 #   include <cstdlib>
 #   include <cmath>
+#   include <chrono>
 #   include "H5Cpp.h"
 #   include "read_hdf5.hpp"
 #endif // TESTS
@@ -71,10 +72,16 @@ main ()
     for (size_t ii=0; ii != Nparticles; ++ii)
         radii[ii] = std::cbrt(masses[ii] / M_4PI_3f32 / density[ii]);
     
-    int64_t box_N = 128;
+    int64_t box_N = 256;
     float *box = (float *)std::malloc(box_N * box_N * box_N * sizeof(float));
 
+    auto t1 = std::chrono::steady_clock::now();
+
     voxelize_gpu(Nparticles, box_N, 1, box_L, coordinates, radii, density, box, nullptr);
+
+    auto t2 = std::chrono::steady_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
 
     std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
 

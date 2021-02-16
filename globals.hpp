@@ -60,8 +60,12 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
                   float *coords_, float *radii_, float *field_, float *box_,
                   char *network_file_) :
     Nthreads_tot { omp_get_max_threads() },
-    Nthreads_root_gpu { 1 },
+    Nthreads_root_gpu { 2 },
+    #ifdef EXTRA_ROOT_ADD
     Nthreads_root_add { 1 },
+    #else // EXTRA_ROOT_ADD
+    Nthreads_root_add { 0 },
+    #endif // EXTRA_ROOT_ADD
     #ifdef MULTI_WORKERS
     Nthreads_workers { Nthreads_tot - Nthreads_root_gpu - Nthreads_root_add },
     #else // MULTI_WORKERS
