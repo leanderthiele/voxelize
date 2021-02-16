@@ -18,6 +18,7 @@
 #include "gpu_handler.hpp"
 #include "gpu_handler_implementation.hpp"
 
+#ifndef WORKERS_MAKE_BATCHES
 static inline void
 check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr,
                  bool can_finish)
@@ -60,6 +61,7 @@ check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr
             gpu_batch_queue_item_ptr->add(gpu_queue_item_ptr);
     }
 }// }}}
+#endif // WORKERS_MAKE_BATCHES
 
 static inline void
 check_gpu_batch_queue ()
@@ -174,11 +176,14 @@ check_finish ()
     if (!globals.workers_finished)
         return false;
 
-    bool gpu_queue_empty,
-         gpu_batch_queue_empty,
+    bool gpu_batch_queue_empty,
+         #ifndef WORKERS_MAKE_BATCHES
+         gpu_queue_empty,
+         #endif // WORKERS_MAKE_BATCHES
          gpu_process_list_empty,
          cpu_queue_empty;
     
+    #ifndef WORKERS_MAKE_BATCHES
     #pragma omp critical (GPU_Queue_Critical)
     gpu_queue_empty = globals.gpu_queue.empty();
 
@@ -192,6 +197,7 @@ check_finish ()
 
         return false;
     }
+    #endif // WORKERS_MAKE_BATCHES
 
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Batch_Queue_Critical)
@@ -284,10 +290,12 @@ root_gpu_process ()
         // we loop until we know that there's no work left to do
         while (true)
         {
+            #ifndef WORKERS_MAKE_BATCHES
             // check if there is an item ready in the GPU queue
             // If yes, append it to the current batch.
             // If that batch is full already, first push it to the gpu_batch_queue
             check_gpu_queue(gpu_batch_queue_item_ptr, can_finish);
+            #endif // WORKERS_MAKE_BATCHES
 
             // check if there is a batch ready to be computed
             check_gpu_batch_queue();

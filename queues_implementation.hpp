@@ -11,6 +11,7 @@
 
 // --- Implementation ---
 
+#ifndef WORKERS_MAKE_BATCHES
 gpu_queue_item::gpu_queue_item ()
 {// {{{
     box_indices.reserve(reserv_size);
@@ -49,6 +50,7 @@ gpu_queue_item::is_full ()
 {// {{{
     return box_indices.size() >= approx_size;
 }// }}}
+#endif // WORKERS_MAKE_BATCHES
 
 cpu_queue_item::cpu_queue_item ()
 {// {{{
@@ -57,9 +59,17 @@ cpu_queue_item::cpu_queue_item ()
     overlaps.reserve(reserv_size);
 }// }}}
 
+// TODO ifdef WORKERS_MAKE_BATCHES, it may not be necessary to have this extra type,
+//                                  but it is definitely more convenient ...
 cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result)
+#ifdef WORKERS_MAKE_BATCHES
+    : box_indices { gpu_result->box_indices },
+      weights { gpu_result->weights }
+#endif
 {// {{{
+    #ifndef WORKERS_MAKE_BATCHES
     assert(gpu_result->gpu_inputs.size() > 0);
+    #endif // WORKERS_MAKE_BATCHES
 
     size_t Nitems = gpu_result->current_idx;
 
@@ -67,6 +77,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     assert(Nitems != 0);
     assert(gpu_result->gpu_tensor.size(0) >= (int64_t)Nitems);
 
+    #ifndef WORKERS_MAKE_BATCHES
     #ifndef NDEBUG
     size_t Nitems1 = 0;
     for (auto x : gpu_result->gpu_inputs)
@@ -76,11 +87,12 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     }
     assert(Nitems == Nitems1);
     #endif // NDEBUG
+    #endif // WORKERS_MAKE_BATCHES
 
+    #ifndef WORKERS_MAKE_BATCHES
     box_indices.reserve(Nitems);
     weights.reserve(Nitems * globals.dim);
     overlaps.reserve(Nitems);
-
     for (auto x : gpu_result->gpu_inputs)
     {
         for (size_t ii=0; ii != x->box_indices.size(); ++ii)
@@ -90,14 +102,16 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
             for (int64_t dd = 0; dd != globals.dim; ++dd)
                 weights.push_back(x->weights[ii*globals.dim+dd]);
     }
+    #endif // WORKERS_MAKE_BATCHES
 
     // get the Tensor back to the CPU
     gpu_result->gpu_tensor = gpu_result->gpu_tensor.to(torch::kCPU);
     gpu_result->gpu_tensor_accessor = gpu_result->gpu_tensor.accessor<float,2>();
 
-    // get the overlaps into this object
+    // get the overlaps into this object, with the correct normalization
     for (size_t ii=0; ii != Nitems; ++ii)
-        overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
+        overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]
+                           * gpu_result->vol_norm[ii]);
 }// }}}
 
 inline void
@@ -141,14 +155,29 @@ gpu_batch_queue_item::gpu_batch_queue_item () :
                                   .pinned_memory(true)
                                   .dtype(torch::kFloat32) ) },
     gpu_tensor_accessor { gpu_tensor.accessor<float,2>() }
-{ }
+{
+    #ifdef WORKERS_MAKE_BATCHES
+    box_indices.reserve(batch_size);
+    weights.reserve(globals.dim * batch_size);
+    vol_norm.reserve(batch_size);
+    #endif // WORKERS_MAKE_BATCHES
+}
 
+#ifndef WORKERS_MAKE_BATCHES
 inline bool
 gpu_batch_queue_item::is_full (size_t to_add)
 {// {{{
     return current_idx + to_add >= batch_size;
 }// }}}
+#else // WORKERS_MAKE_BATCHES
+inline bool
+gpu_batch_queue_item::is_full ()
+{
+    return box_indices.size() == batch_size;
+}
+#endif // WORKERS_MAKE_BATCHES
 
+#ifndef WORKERS_MAKE_BATCHES
 inline void
 gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
 {// {{{
@@ -163,6 +192,33 @@ gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
             gpu_tensor_accessor[current_idx][jj]
                 = gpu_input->network_inputs[ii*netw_item_size+jj];
 }// }}}
+#else // WORKERS_MAKE_BATCHES
+inline void
+gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
+{// {{{
+    box_indices.push_back(box_index);
+
+    #pragma loop_count (1, 2, 3)
+    for (int ii=0; ii != globals.dim; ++ii)
+        weights.push_back(weight[ii]);
+
+    vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
+
+    mod_rotations(cub);
+
+    // auxiliary variable to keep track of where we are
+    size_t second_idx = 0;
+
+    gpu_tensor_accessor[current_idx][second_idx++] = R;
+    for (int ii=0; ii != 3; ++ii)
+        gpu_tensor_accessor[current_idx][second_idx++] = cub[ii];
+    gpu_tensor_accessor[current_idx][second_idx++] = std::log(R);
+    for (int ii=0; ii != 3; ++ii)
+        gpu_tensor_accessor[current_idx][second_idx++] = cub[ii] / R;
+
+    ++current_idx;
+}// }}}
+#endif // WORKERS_MAKE_BATCHES
 
 gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                                     std::shared_ptr<c10::Device> device_,

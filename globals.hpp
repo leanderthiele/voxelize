@@ -39,7 +39,9 @@ struct Globals
 
     // queues that need to be accessed by all threads
     cpu_queue_t cpu_queue;
+    #ifndef WORKERS_MAKE_BATCHES
     gpu_queue_t gpu_queue;
+    #endif // WORKERS_MAKE_BATCHES
 
     // queues that are only accessed by the root thread
     gpu_batch_queue_t  gpu_batch_queue;

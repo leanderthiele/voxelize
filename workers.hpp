@@ -31,6 +31,7 @@ add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr,
     }
 }// }}}
 
+#ifndef WORKERS_MAKE_BATCHES
 static inline void
 add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
                           bool can_finish=false)
@@ -44,6 +45,21 @@ add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
         gpu_queue_item_ptr.reset(new gpu_queue_item);
     }
 }// }}}
+#else // WORKERS_MAKE_BATCHES
+static inline void
+add_to_gpu_batch_queue_if_full (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr,
+                                bool can_finish=false)
+{// {{{
+    if (gpu_batch_queue_item_ptr->is_full()
+        || (can_finish && gpu_batch_queue_item_ptr->box_indices.size()))
+    {
+        #pragma omp critical(GPU_Batch_Queue_Critical)
+        globals.gpu_batch_queue.push(gpu_batch_queue_item_ptr);
+
+        gpu_batch_queue_item_ptr.reset(new gpu_batch_queue_item);
+    }
+}// }}}
+#endif // WORKERS_MAKE_BATCHES
 
 static void
 workers_process ()
@@ -73,7 +89,12 @@ workers_process ()
     #endif // MULTI_WORKERS
     {// parallel
         std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr { new cpu_queue_item };
+
+        #ifndef WORKERS_MAKE_BATCHES
         std::shared_ptr<gpu_queue_item> gpu_queue_item_ptr { new gpu_queue_item };
+        #else // WORKERS_MAKE_BATCHES
+        std::shared_ptr<gpu_batch_queue_item> gpu_batch_queue_item_ptr { new gpu_batch_queue_item };
+        #endif // WORKERS_MAKE_BATCHES
 
         // normalize the coordinates
         #ifdef MULTI_WORKERS
@@ -98,7 +119,9 @@ workers_process ()
             // TODO it's possible that we need to put these in the inner
             //      loops if one particle carries too much data with it
             add_to_cpu_queue_if_full(cpu_queue_item_ptr);
+            #ifndef WORKERS_MAKE_BATCHES
             add_to_gpu_queue_if_full(gpu_queue_item_ptr);
+            #endif // WORKERS_MAKE_BATCHES
 
             for (int64_t xx  = (int64_t)(part_centre[0]-R) - 1L;
                          xx <= (int64_t)(part_centre[0]+R);
@@ -135,8 +158,15 @@ workers_process ()
                         #endif
 
                         if (triviality == trivial_case_e::non_trivial)
+                        {
                             // the overlap is not trivially computed
+                            #ifndef WORKERS_MAKE_BATCHES
                             gpu_queue_item_ptr->add(idx, cub, R, weight);
+                            #else // WORKERS_MAKE_BATCHES
+                            add_to_gpu_batch_queue_if_full(gpu_batch_queue_item_ptr);
+                            gpu_batch_queue_item_ptr->add(idx, cub, R, weight);
+                            #endif // WORKERS_MAKE_BATCHES
+                        }
                         else
                             // overlap has been trivially computed, needs only to be added
                             cpu_queue_item_ptr->add(idx, weight, overlap);
@@ -147,7 +177,11 @@ workers_process ()
 
         // clean up if we have any unfinished data in our local buffers
         add_to_cpu_queue_if_full(cpu_queue_item_ptr, true);
+        #ifndef WORKERS_MAKE_BATCHES
         add_to_gpu_queue_if_full(gpu_queue_item_ptr, true);
+        #else // WORKERS_MAKE_BATCHES
+        add_to_gpu_batch_queue_if_full(gpu_batch_queue_item_ptr, true);
+        #endif // WORKERS_MAKE_BATCHES
 
     }// parallel
 

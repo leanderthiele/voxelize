@@ -28,9 +28,11 @@ struct gpu_process_item;
 // Working along the queue means adding items to the output box.
 typedef std::queue<std::shared_ptr<cpu_queue_item>>          cpu_queue_t;
 
+#ifndef WORKERS_MAKE_BATCHES
 // lives on shared memory, all workers insert
 // Working along the queue means assembling gpu_batch_queue_items
 typedef std::queue<std::shared_ptr<gpu_queue_item>>          gpu_queue_t;
+#endif // WORKERS_MAKE_BATCHES
 
 // lives on root memory, root inserts
 // Working along the queue means constructing gpu_process_items
@@ -40,7 +42,7 @@ typedef std::queue<std::shared_ptr<gpu_batch_queue_item>>    gpu_batch_queue_t;
 // Working along the list means constructing cpu_queue_items
 typedef std::forward_list<std::shared_ptr<gpu_process_item>> gpu_process_list_t;
 
-
+#ifndef WORKERS_MAKE_BATCHES
 struct gpu_queue_item
 {// {{{
     // this is the approximate size we're aiming for
@@ -69,6 +71,7 @@ struct gpu_queue_item
 
     bool is_full ();
 };// }}}
+#endif // WORKERS_MAKE_BATCHES
 
 // Note : this struct is a one-use object, after calling compute the results
 //        can be retrieved but in the current implementation it has to be
@@ -79,16 +82,32 @@ struct gpu_batch_queue_item
     static constexpr size_t netw_item_size = 8;
 
     size_t current_idx;
+    #ifndef WORKERS_MAKE_BATCHES
     std::vector<std::shared_ptr<gpu_queue_item>> gpu_inputs;
+    #else // WORKERS_MAKE_BATCHES
+    std::vector<int64_t> box_indices;
+    std::vector<float>   weights;
+    std::vector<float>   vol_norm; // TODO -- when everything is working,
+                                   //         we can merge this with the weights vector
+    #endif // WORKERS_MAKE_BATCHES
+
     torch::Tensor gpu_tensor;
     torch::TensorAccessor<float,2> gpu_tensor_accessor;
 
     // constructor
     gpu_batch_queue_item ();
 
+    #ifndef WORKERS_MAKE_BATCHES
     bool is_full (size_t to_add);
+    #else // WORKERS_MAKE_BATCHES
+    bool is_full ();
+    #endif // WORKERS_MAKE_BATCHES
 
+    #ifndef WORKERS_MAKE_BATCHES
     void add (std::shared_ptr<gpu_queue_item> gpu_input);
+    #else // WORKERS_MAKE_BATCHES
+    void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
+    #endif // WORKERS_MAKE_BATCHES
 };// }}}
 
 struct cpu_queue_item
