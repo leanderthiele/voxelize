@@ -64,7 +64,11 @@ check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr
 #endif // WORKERS_MAKE_BATCHES
 
 static inline void
+#ifdef COUNT
+check_gpu_batch_queue (uint64_t &processed_batches)
+#else // COUNT
 check_gpu_batch_queue ()
+#endif // COUNT
 {// {{{
     std::shared_ptr<gpu_batch_queue_item> gpu_batch_queue_item_ptr;
 
@@ -83,6 +87,10 @@ check_gpu_batch_queue ()
 
     if (gpu_batch_queue_item_ptr)
     {
+        #ifdef COUNT
+        ++processed_batches;
+        #endif // COUNT
+
         std::shared_ptr<Net> network_ptr;
         std::shared_ptr<c10::Device> device_ptr;
         std::shared_ptr<c10::cuda::CUDAStream> stream_ptr;
@@ -142,11 +150,11 @@ check_gpu_process_list ()
 }// }}}
 
 static inline void
-#ifndef NDEBUG
-check_cpu_queue (uint64_t &processed_numbers)
-#else
+#ifdef COUNT
+check_cpu_queue (uint64_t &processed_chunks, uint64_t &processed_numbers)
+#else // COUNT
 check_cpu_queue ()
-#endif // NDEBUG
+#endif // COUNT
 {// {{{
     std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr;
 
@@ -164,9 +172,10 @@ check_cpu_queue ()
     if (cpu_queue_item_ptr)
     {
         cpu_queue_item_ptr->add_to_box();
-        #ifndef NDEBUG
+        #ifdef COUNT
+        ++processed_chunks;
         processed_numbers += cpu_queue_item_ptr->box_indices.size();
-        #endif // NDEBUG
+        #endif // COUNT
     }
 }// }}}
 
@@ -262,23 +271,32 @@ root_gpu_process ()
     std::fprintf(stderr, "Using %d threads for root process.\n", globals.Nthreads_root_gpu);
     #endif // NDEBUG
 
+    #ifdef COUNT
     #ifndef EXTRA_ROOT_ADD
-    #ifndef NDEBUG
     uint64_t processed_numbers = 0UL;
-    #endif // NDEBUG
+    uint64_t processed_chunks = 0UL;
     #endif // EXTRA_ROOT_ADD
+    uint64_t processed_batches = 0UL;
+    #endif // COUNT
 
     #ifdef MULTI_ROOT
-    #   if !defined(NDEBUG) && !defined(EXTRA_ROOT_ADD)
+    #   if defined(COUNT) && !defined(EXTRA_ROOT_ADD)
     #       pragma omp parallel \
                        shared(globals) \
                        default(none) \
-                       reduction(+:processed_numbers)
+                       reduction(+:processed_numbers,processed_chunks,processed_batches)
     #   else
-    #       pragma omp parallel \
-                       shared(globals) \
-                       default(none)
-    #   endif // NDEBUG, EXTRA_ROOT_ADD
+    #       if defined(COUNT) && defined(EXTRA_ROOT_ADD)
+    #           pragma omp parallel \
+                           shared(globals) \
+                           default(none) \
+                           reduction(+:processed_chunks,processed_batches)
+    #       else
+    #           pragma omp parallel \
+                           shared(globals) \
+                           default(none)
+    #       endif
+    #   endif // COUNT, EXTRA_ROOT_ADD
     #endif // MULTI_ROOT
     {
         // we need to keep one temporary across iterations, since a single batch
@@ -298,6 +316,9 @@ root_gpu_process ()
             #endif // WORKERS_MAKE_BATCHES
 
             // check if there is a batch ready to be computed
+            #ifdef COUNT
+            check_gpu_batch_queue(processed_batches);
+            #else // COUNT
             check_gpu_batch_queue();
 
             // check if we can find a finished GPU process whose result we can then
@@ -306,11 +327,11 @@ root_gpu_process ()
 
             // retreive some CPU work if available and perform it
             #ifndef EXTRA_ROOT_ADD
-            #ifndef NDEBUG
-            check_cpu_queue(processed_numbers);
-            #else // NDEBUG
+            #ifdef COUNT
+            check_cpu_queue(processed_chunks, processed_numbers);
+            #else // COUNT
             check_cpu_queue();
-            #endif // NDEBUG
+            #endif // COUNT
             #endif // EXTRA_ROOT_ADD
 
             // it is important the the next two are in this order
@@ -329,11 +350,12 @@ root_gpu_process ()
         }
     }
 
+    #ifdef COUNT
     #ifndef EXTRA_ROOT_ADD
-    #ifndef NDEBUG
-    std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
-    #endif // NDEBUG
+    std::fprintf(stderr, "Root processed %lu numbers in %lu CPU-chunks.\n", processed_numbers, processed_chunks);
     #endif // EXTRA_ROOT_ADD
+    std::fprintf(stderr, "Root processed %lu GPU-batches.\n", processed_batches);
+    #endif // COUNT
 
 //    #ifndef NDEBUG
     std::fprintf(stderr, "root_gpu_process : ended.\n");
@@ -352,19 +374,20 @@ root_add_process ()
     std::fprintf(stderr, "root_add_process : started ...\n");
     #endif // NDEBUG
 
-    #ifndef NDEBUG
+    #ifdef COUNT
     uint64_t processed_numbers = 0UL;
-    #endif // NDEBUG
+    uint64_t processed_chunks = 0UL;
+    #endif // COUNT
 
     bool cpu_queue_empty;
 
     while (true)
     {
-        #ifndef NDEBUG
-        check_cpu_queue(processed_numbers);
-        #else // NDEBUG
+        #ifdef COUNT
+        check_cpu_queue(processed_chunks, processed_numbers);
+        #else // COUNT
         check_cpu_queue();
-        #endif // NDEBUG
+        #endif // COUNT
 
         #pragma omp critical(CPU_Queue_Critical)
         cpu_queue_empty = globals.cpu_queue.empty();
@@ -373,9 +396,9 @@ root_add_process ()
             break;
     }
 
-    #ifndef NDEBUG
-    std::fprintf(stderr, "Root processed %lu numbers.\n", processed_numbers);
-    #endif // NDEBUG
+    #ifdef COUNT
+    std::fprintf(stderr, "Root processed %lu numbers in %lu CPU-chunks.\n", processed_numbers, processed_chunks);
+    #endif // COUNT
 
 // TODO
 //    #ifndef NDEBUG
