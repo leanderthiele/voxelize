@@ -100,7 +100,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
         for (size_t ii=0; ii != x->box_indices.size(); ++ii)
             #pragma loop_count (1, 2, 3)
             for (int64_t dd = 0; dd != globals.dim; ++dd)
-                weights.push_back(x->weights[ii*globals.dim+dd]);
+                weights.push_back(x->weights[ii*globals.dim+dd] * gpu_result->vol_norm[ii]);
     }
     #endif // WORKERS_MAKE_BATCHES
 
@@ -110,8 +110,12 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
 
     // get the overlaps into this object, with the correct normalization
     for (size_t ii=0; ii != Nitems; ++ii)
+        #ifndef WORKERS_MAKE_BATCHES
+        overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
+        #else // WORKERS_MAKE_BATCHES
         overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]
                            * gpu_result->vol_norm[ii]);
+        #endif // WORKERS_MAKE_BATCHES
 }// }}}
 
 inline void
