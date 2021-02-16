@@ -280,23 +280,23 @@ root_gpu_process ()
     #endif // COUNT
 
     #ifdef MULTI_ROOT
-    #   if defined(COUNT) && !defined(EXTRA_ROOT_ADD)
-    #       pragma omp parallel \
-                       shared(globals) \
-                       default(none) \
-                       reduction(+:processed_numbers,processed_chunks,processed_batches)
-    #   else
-    #       if defined(COUNT) && defined(EXTRA_ROOT_ADD)
+    #   ifdef COUNT
+    #       ifndef EXTRA_ROOT_ADD
+    #           pragma omp parallel \
+                           shared(globals) \
+                           default(none) \
+                           reduction(+:processed_numbers,processed_chunks,processed_batches)
+    #       else // EXTRA_ROOT_ADD
     #           pragma omp parallel \
                            shared(globals) \
                            default(none) \
                            reduction(+:processed_chunks,processed_batches)
-    #       else
-    #           pragma omp parallel \
-                           shared(globals) \
-                           default(none)
-    #       endif
-    #   endif // COUNT, EXTRA_ROOT_ADD
+    #       endif // EXTRA_ROOT_ADD
+    #   else // COUNT
+    #       pragma omp parallel \
+                       shared(globals) \
+                       default(none)
+    #   endif // COUNT
     #endif // MULTI_ROOT
     {
         // we need to keep one temporary across iterations, since a single batch
@@ -320,6 +320,7 @@ root_gpu_process ()
             check_gpu_batch_queue(processed_batches);
             #else // COUNT
             check_gpu_batch_queue();
+            #endif // COUNT
 
             // check if we can find a finished GPU process whose result we can then
             // push to the CPU queue
