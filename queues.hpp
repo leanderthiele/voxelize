@@ -53,9 +53,6 @@ struct gpu_queue_item
     // Hopefully we'll rarely need re-allocs
     static constexpr size_t reserv_size = 4096;
 
-    // this is the network input size per item, later we'll probably define it somewhere else
-    static constexpr size_t netw_item_size = 8;
-
     std::vector<int64_t> box_indices;
     std::vector<float>   weights;
     std::vector<float>   network_inputs;
@@ -79,7 +76,6 @@ struct gpu_queue_item
 struct gpu_batch_queue_item
 {// {{{
     static constexpr size_t batch_size = 16*32768;
-    static constexpr size_t netw_item_size = 8;
 
     size_t current_idx;
     #ifndef WORKERS_MAKE_BATCHES

@@ -6,6 +6,7 @@
 #endif
 
 #include "geometry.hpp"
+#include "network.hpp"
 #include "queues.hpp"
 #include "globals.hpp"
 
@@ -16,7 +17,7 @@ gpu_queue_item::gpu_queue_item ()
 {// {{{
     box_indices.reserve(reserv_size);
     weights.reserve(reserv_size * globals.dim);
-    network_inputs.reserve(reserv_size * netw_item_size);
+    network_inputs.reserve(reserv_size * Net::netw_item_size);
     vol_norm.reserve(reserv_size);
 }// }}}
 
@@ -33,16 +34,8 @@ gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const
     // add the volume normalization
     vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
 
-    // bring the cube into canonical form
-    mod_rotations(cub);
-
-    // now do the network inputs -- TODO : change these depending on specific network setup
-    network_inputs.push_back(R);
-    for (int ii=0; ii != 3; ++ii)
-        network_inputs.push_back(cub[ii]);
-    network_inputs.push_back(std::log(R));
-    for (int ii=0; ii != 3; ++ii)
-        network_inputs.push_back(cub[ii] / R);
+    // append the network inputs
+    Net::input_normalization(cub, R, network_inputs);
 }// }}}
 
 inline bool
@@ -154,7 +147,7 @@ cpu_queue_item::add_to_box ()
 
 gpu_batch_queue_item::gpu_batch_queue_item () :
     current_idx { 0 },
-    gpu_tensor { torch::empty( {batch_size, netw_item_size},
+    gpu_tensor { torch::empty( {batch_size, Net::netw_item_size},
                                device(torch::kCPU)
                                   .pinned_memory(true)
                                   .dtype(torch::kFloat32) ) },
@@ -192,9 +185,9 @@ gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
 
     // write data from this chunk into the batch
     for (size_t ii=0; ii != gpu_input->box_indices.size(); ++ii, ++current_idx)
-        for (size_t jj=0; jj != netw_item_size; ++jj)
+        for (size_t jj=0; jj != Net::netw_item_size; ++jj)
             gpu_tensor_accessor[current_idx][jj]
-                = gpu_input->network_inputs[ii*netw_item_size+jj];
+                = gpu_input->network_inputs[ii*Net::netw_item_size+jj];
 }// }}}
 #else // WORKERS_MAKE_BATCHES
 inline void
@@ -208,17 +201,8 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
 
     vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
 
-    mod_rotations(cub);
-
-    // auxiliary variable to keep track of where we are
-    size_t second_idx = 0;
-
-    gpu_tensor_accessor[current_idx][second_idx++] = R;
-    for (int ii=0; ii != 3; ++ii)
-        gpu_tensor_accessor[current_idx][second_idx++] = cub[ii];
-    gpu_tensor_accessor[current_idx][second_idx++] = std::log(R);
-    for (int ii=0; ii != 3; ++ii)
-        gpu_tensor_accessor[current_idx][second_idx++] = cub[ii] / R;
+    // write network inputs into tensor
+    Net::input_normalization(cub, R, gpu_tensor_accessor[current_idx]);
 
     ++current_idx;
 }// }}}
