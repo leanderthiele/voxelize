@@ -32,7 +32,7 @@ struct Net : torch::nn::Module
     torch::Tensor forward (torch::Tensor &x);
 
     static float
-    input_normalization (const std::array<float,3> &cub, float R, size_t idx);
+    input_normalization_val (const std::array<float,3> &cub, float R, size_t idx);
 
     template<typename T>
     static void
@@ -72,7 +72,7 @@ Net::forward (torch::Tensor &x)
 }// }}}
 
 inline float
-Net::input_normalization (const std::array<float,3> &cub, float R, size_t idx)
+Net::input_normalization_val (const std::array<float,3> &cub, float R, size_t idx)
 {// {{{
     if (idx == 0UL)
         return R;
@@ -90,7 +90,7 @@ Net::input_normalization (std::array<float,3> &cub, float R, T &out)
 {// {{{
     mod_rotations(cub);
     for (size_t ii=0; ii != netw_item_size; ++ii)
-        out[ii] = input_normalization(cub, R, ii);
+        out[ii] = input_normalization_val(cub, R, ii);
 }// }}}
 
 inline void
@@ -98,7 +98,7 @@ Net::input_normalization (std::array<float,3> &cub, float R, std::vector<float> 
 {// {{{
     mod_rotations(cub);
     for (size_t ii=0; ii != netw_item_size; ++ii)
-        out.push_back(input_normalization(cub, R, ii));
+        out.push_back(input_normalization_val(cub, R, ii));
 }// }}}
 
 #endif // NETWORK_HPP
