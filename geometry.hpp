@@ -1,6 +1,8 @@
 #ifndef GEOMETRY_HPP
 #define GEOMETRY_HPP
 
+// FIXME get rid of the square rooots!!!
+
 #include <cassert>
 #include <array>
 #include <algorithm>
