@@ -9,15 +9,20 @@
 
 #include "network.hpp"
 
+bool gpu_avail;
+std::shared_ptr<c10::Device> device_ptr;
+
 static constexpr size_t batchsize = 4096;
 static constexpr size_t Nepoch = 100;
 static constexpr size_t Nbatches_epoch = 100;
 
 static constexpr double learning_rate = 1e-3;
 
+// auxiliary
 static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
+// file names
 static const std::string in_fname = "inputs.bin";
 static const std::string out_fname = "outputs.bin";
 static const std::string net_fname = "network.pt";
@@ -28,6 +33,9 @@ size_t Nsamples = 0;
 auto inputs = std::vector<float>();
 auto outputs = std::vector<float>();
 auto validation_loss = std::vector<float>();
+
+// establishes the GPU environment
+void set_device ();
 
 // loads a binary file into a vector
 void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride);
@@ -40,10 +48,14 @@ torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ);
 
 int main ()
 {// {{{
+    set_device();
+
     load_vec(inputs, in_fname, in_stride);
     load_vec(outputs, out_fname, out_stride);
 
     auto net = std::make_shared<Net>();
+    if (gpu_avail)
+        net->to(*device_ptr);
 
     torch::optim::Adam optimizer (net->parameters(), learning_rate);
 
@@ -82,6 +94,20 @@ int main ()
     }
 }// }}}
 
+void set_device ()
+{// {{{
+    if (torch::cuda::is_available())
+    {
+        gpu_avail = true;
+        device_ptr = std::make_shared<c10::Device>(c10::DeviceType::CUDA);
+    }
+    else
+    {
+        gpu_avail = false;
+        device_ptr = std::make_shared<c10::Device>(c10::DeviceType::CPU);
+    }
+}// }}}
+
 void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 {// {{{
     std::FILE *f = std::fopen(fname.c_str(), "rb");
@@ -106,8 +132,14 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
 {// {{{
     static size_t current_idx = 0;
 
-    torch::Tensor in = torch::empty({batchsize, Net::netw_item_size}, torch::kFloat32);
-    torch::Tensor out = torch::empty({batchsize, 1}, torch::kFloat32);
+    static auto opt = torch::TensorOptions()
+                        .dtype(torch::kFloat32)
+                        .requires_grad(true)
+                        .device(torch::DeviceType::CPU)
+                        .pinned_memory(gpu_avail);
+
+    torch::Tensor in = torch::empty({batchsize, Net::netw_item_size}, opt);
+    torch::Tensor out = torch::empty({batchsize, 1}, opt);
 
     auto in_acc = in.accessor<float,2>();
     auto out_acc = out.accessor<float,2>();
@@ -118,6 +150,12 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
         Net::input_normalization(in_data, in_acc[ii]);
 
         out_acc[ii][0] = outputs[current_idx];
+    }
+
+    if (gpu_avail)
+    {
+        in = in.to(*device_ptr, true);
+        out = out.to(*device_ptr, true);
     }
 
     return std::make_pair(in, out);
