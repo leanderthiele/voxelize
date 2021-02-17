@@ -33,12 +33,12 @@ struct Net : torch::nn::Module
 
     template<typename T>
     static void
-    input_normalization (std::array<float,3> &cub, float R, T &out, bool do_rotations=true);
+    input_normalization (std::array<float,3> &cub, float R, T out, bool do_rotations=true);
 
     template<typename T>
     static void
     // assumes data in the form { R, cub }
-    input_normalization (const float *data, T &out);
+    input_normalization (const float *data, T out);
 
     static void
     input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations=true);
@@ -94,7 +94,7 @@ Net::input_normalization_val (const T &cub, float R, size_t idx)
 
 template<typename T>
 inline void
-Net::input_normalization (std::array<float,3> &cub, float R, T &out, bool do_rotations)
+Net::input_normalization (std::array<float,3> &cub, float R, T out, bool do_rotations)
 {// {{{
     if (do_rotations)
         mod_rotations(cub);
@@ -104,7 +104,7 @@ Net::input_normalization (std::array<float,3> &cub, float R, T &out, bool do_rot
 
 template<typename T>
 inline void
-Net::input_normalization (const float *data, T &out)
+Net::input_normalization (const float *data, T out)
 {// {{{
     float R = data[0];
     const float *cub = data+1;
