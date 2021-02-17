@@ -18,16 +18,16 @@ static constexpr double learning_rate = 1e-3;
 static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
-static const std::string in_fname = "input.bin";
-static const std::string out_fname = "output.bin";
+static const std::string in_fname = "inputs.bin";
+static const std::string out_fname = "outputs.bin";
 static const std::string net_fname = "network.pt";
 static const std::string val_fname = "validation_loss.bin";
 
 // how many samples we have
 size_t Nsamples = 0;
-std::vector<float> inputs;
-std::vector<float> outputs;
-std::vector<float> validation_loss;
+auto inputs = std::vector<float>();
+auto outputs = std::vector<float>();
+auto validation_loss = std::vector<float>();
 
 // loads a binary file into a vector
 void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride);
@@ -67,6 +67,8 @@ int main ()
         auto val_pred = net->forward(val_batch.first);
         auto loss = loss_fct(val_batch.second, val_pred);
         validation_loss.push_back(loss.item<float>());
+
+        std::fprintf(stderr, "epoch %lu / %lu\n", epoch_idx+1, Nepoch);
     }
 
     // save network
@@ -84,7 +86,9 @@ void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 {// {{{
     std::FILE *f = std::fopen(fname.c_str(), "rb");
     size_t Nel;
+
     std::fread(&Nel, sizeof Nel, 1, f);
+    std::fprintf(stderr, "Loading %.2f MB from file %s\n", 1e-6 *(float)(Nel*sizeof(float)), fname.c_str());
 
     if (Nsamples == 0)
         Nsamples = Nel / stride;
@@ -106,14 +110,14 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
     torch::Tensor out = torch::empty({batchsize, 1}, torch::kFloat32);
 
     auto in_acc = in.accessor<float,2>();
-    auto out_acc = out.accessor<float,1>();
+    auto out_acc = out.accessor<float,2>();
 
     for (size_t ii=0; ii != batchsize; ++ii, current_idx=(current_idx+1)%Nsamples)
     {
         const float *in_data = inputs.data() + current_idx*in_stride;
         Net::input_normalization(in_data, in_acc[ii]);
 
-        out_acc[ii] = outputs[current_idx];
+        out_acc[ii][0] = outputs[current_idx];
     }
 
     return std::make_pair(in, out);

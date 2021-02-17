@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdio>
 #include <vector>
 #include <array>
 #include <utility>
@@ -9,7 +10,7 @@
 #include "network.hpp"
 #include "overlap_lft_double.hpp"
 
-static constexpr size_t Nsamples = 1 << 16;
+static constexpr size_t Nsamples = 1 << 26;
 static constexpr float  Rmin     = 0.1;
 static constexpr float  Rmax     = 10.0;
 
@@ -46,6 +47,9 @@ int main ()
         append_input(input);
         auto output = generate_output(input);
         append_output(output);
+
+        if (!((ii+1UL)%10000UL))
+            std::fprintf(stderr, "generate_samples : %lu / %lu\n", ii+1UL, Nsamples);
     }
 
     save_vec(inputs, in_fname);
