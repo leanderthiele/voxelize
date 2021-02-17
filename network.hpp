@@ -31,15 +31,22 @@ struct Net : torch::nn::Module
 
     torch::Tensor forward (torch::Tensor &x);
 
-    static float
-    input_normalization_val (const std::array<float,3> &cub, float R, size_t idx);
+    template<typename T>
+    static void
+    input_normalization (std::array<float,3> &cub, float R, T &out, bool do_rotations=true);
 
     template<typename T>
     static void
-    input_normalization (std::array<float,3> &cub, float R, T &out);
+    // assumes data in the form { R, cub }
+    input_normalization (const float *data, T &out);
 
     static void
-    input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out);
+    input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations=true);
+
+private :
+    template<typename T>
+    static float
+    input_normalization_val (const T &cub, float R, size_t idx);
 };
 
 // --- Implementation ---
@@ -71,8 +78,9 @@ Net::forward (torch::Tensor &x)
     return x;
 }// }}}
 
+template<typename T>
 inline float
-Net::input_normalization_val (const std::array<float,3> &cub, float R, size_t idx)
+Net::input_normalization_val (const T &cub, float R, size_t idx)
 {// {{{
     if (idx == 0UL)
         return R;
@@ -86,17 +94,29 @@ Net::input_normalization_val (const std::array<float,3> &cub, float R, size_t id
 
 template<typename T>
 inline void
-Net::input_normalization (std::array<float,3> &cub, float R, T &out)
+Net::input_normalization (std::array<float,3> &cub, float R, T &out, bool do_rotations)
 {// {{{
-    mod_rotations(cub);
+    if (do_rotations)
+        mod_rotations(cub);
+    for (size_t ii=0; ii != netw_item_size; ++ii)
+        out[ii] = input_normalization_val(cub, R, ii);
+}// }}}
+
+template<typename T>
+inline void
+Net::input_normalization (const float *data, T &out)
+{// {{{
+    float R = data[0];
+    const float *cub = data+1;
     for (size_t ii=0; ii != netw_item_size; ++ii)
         out[ii] = input_normalization_val(cub, R, ii);
 }// }}}
 
 inline void
-Net::input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out)
+Net::input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations)
 {// {{{
-    mod_rotations(cub);
+    if (do_rotations)
+        mod_rotations(cub);
     for (size_t ii=0; ii != netw_item_size; ++ii)
         out.push_back(input_normalization_val(cub, R, ii));
 }// }}}
