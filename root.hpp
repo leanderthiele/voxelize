@@ -290,7 +290,7 @@ root_gpu_process ()
     #           pragma omp parallel \
                            shared(globals) \
                            default(none) \
-                           reduction(+:processed_chunks,processed_batches)
+                           reduction(+:processed_batches)
     #       endif // EXTRA_ROOT_ADD
     #   else // COUNT
     #       pragma omp parallel \

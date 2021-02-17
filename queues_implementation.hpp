@@ -237,6 +237,8 @@ gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch
 inline bool
 gpu_process_item::is_done ()
 {// {{{
+    // TODO FIXME for testing only!!!
+//    return true;
     return stream->query();
 }// }}}
 
@@ -249,15 +251,25 @@ gpu_process_item::compute ()
     std::fprintf(stderr, "in gpu_process_item::compute(), trying to compute.\n");
     #endif
 
-    // establish a Stream context
-    {
-        at::cuda::CUDAMultiStreamGuard guard (*stream);
+    // try until we have memory available
+    // FIXME This doesn't work at the moment
+    while (true)
+        try
+        {
+            // establish a Stream context
+            at::cuda::CUDAMultiStreamGuard guard (*stream);
 
-        // push the data to the GPU (non-blocking)
-        batch->gpu_tensor = batch->gpu_tensor.to(*device, true);
+            // push the data to the GPU (non-blocking)
+            batch->gpu_tensor = batch->gpu_tensor.to(*device, true);
 
-        batch->gpu_tensor = network->forward(batch->gpu_tensor);
-    }
+            batch->gpu_tensor = network->forward(batch->gpu_tensor);
+
+            break;
+        }
+        catch (c10::Error &e)
+        {
+            continue;
+        }
 }// }}}
 
 

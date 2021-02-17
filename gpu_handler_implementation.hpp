@@ -86,6 +86,7 @@ gpu_handler::get_resource (std::shared_ptr<Net> &network,
     static std::default_random_engine rng;
     static std::uniform_int_distribution<size_t> dist(0);
 
+    #ifndef RANDOM_STREAM
     std::vector<std::pair<size_t,std::vector<size_t>>> idle_stream_indices { Ngpu };
 
     size_t tmp_current_gpu = current_gpu;
@@ -128,6 +129,10 @@ gpu_handler::get_resource (std::shared_ptr<Net> &network,
             break;
         }
     }
+    #else // RANDOM_STREAM
+    size_t device_idx = dist(rng) % Ngpu;
+    size_t stream_idx = dist(rng) % streams[device_idx].size();
+    #endif // RANDOM_STREAM
     
     // fill the return values
     network = networks[device_idx];

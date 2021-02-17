@@ -76,16 +76,16 @@ workers_process ()
     std::fprintf(stderr, "workers using %d threads.\n", globals.Nthreads_workers);
     #endif // NDEBUG
 
-    #ifndef NDEBUG
+    #ifdef COUNT
     uint64_t processed_numbers = 0UL;
-    #endif // NDEBUG
+    #endif // COUNT
 
     #ifdef MULTI_WORKERS
-    #   ifndef NDEBUG
+    #   ifdef COUNT
     #       pragma omp parallel reduction(+:processed_numbers)
-    #   else // NDEBUG
+    #   else // COUNT
     #       pragma omp parallel
-    #   endif // NDEBUG
+    #   endif // COUNT
     #endif // MULTI_WORKERS
     {// parallel
         std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr { new cpu_queue_item };
@@ -108,7 +108,8 @@ workers_process ()
         }
 
         #ifdef MULTI_WORKERS
-        #   pragma omp for schedule(dynamic, 128)
+        #   pragma omp for schedule(dynamic, 16) // NOTE : the chunk size can have a huge effect,
+                                                 //        16 is about the best
         #endif // MULTI_WORKERS
         for (uint64_t pp=0UL; pp < globals.Nparticles; ++pp)
         {
@@ -153,7 +154,7 @@ workers_process ()
                         if (triviality == trivial_case_e::no_intersect)
                             continue;
                         
-                        #ifndef NDEBUG
+                        #ifdef COUNT
                         ++processed_numbers;
                         #endif
 
@@ -188,7 +189,7 @@ workers_process ()
     // we are done and should let the root thread know
     globals.workers_finished = true;
 
-    #ifndef NDEBUG
+    #ifdef COUNT
     std::fprintf(stderr, "Workers processed %lu numbers.\n", processed_numbers);
     #endif // NDEBUG
 

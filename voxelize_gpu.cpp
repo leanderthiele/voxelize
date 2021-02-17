@@ -9,6 +9,7 @@
 #include "workers.hpp"
 
 #ifdef TESTS
+#   include <cstdio>
 #   include <cstdlib>
 #   include <cmath>
 #   include <chrono>
@@ -52,6 +53,16 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
         #pragma omp section
         workers_process();
     }
+
+    #ifdef COUNT
+    size_t gpu_process_items = 0;
+    for (auto x : globals.gpu_process_list)
+        ++gpu_process_items;
+    std::fprintf(stderr, "In the end, %lu in gpu_batch_queue, %lu in gpu_process_list, %lu in cpu_queue\n",
+                         globals.gpu_batch_queue.size(),
+                         gpu_process_items,
+                         globals.cpu_queue.size());
+    #endif // COUNT
 }
 
 #ifdef TESTS
