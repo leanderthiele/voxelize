@@ -1,4 +1,5 @@
-#   include <cstdio>
+#include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -82,10 +83,18 @@ main ()
     
     int64_t box_N = 256;
     float *box = (float *)std::malloc(box_N * box_N * box_N * sizeof(float));
-    for (size_t ii=0; ii != box_N * box_N * box_N; ++ii)
+    for (size_t ii=0; ii != (size_t)(box_N * box_N * box_N); ++ii)
         box[ii] = 0.0F;
 
     auto t1 = std::chrono::steady_clock::now();
+
+    for (size_t ii=0; ii != Nparticles; ++ii)
+    {
+        assert(density[ii] >= 0.0F);
+        assert(radii[ii] >= 0.0F);
+        for (size_t jj=0; jj != 3; ++jj)
+            assert(coordinates[ii*3UL+jj]<=box_L && coordinates[ii*3UL+jj]>=0.0F);
+    }
 
     voxelize_gpu(Nparticles, box_N, 1, box_L,
                  coordinates, radii, density, box, net_fname.c_str());

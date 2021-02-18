@@ -117,6 +117,7 @@ cpu_queue_item::add (int64_t box_index, const float *weight, float overlap)
     for (int ii=0; ii != globals.dim; ++ii)
         weights.push_back(weight[ii]);
     
+    assert(overlap >= 0.0F);
     overlaps.push_back(overlap);
 }// }}}
 
