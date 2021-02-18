@@ -3,6 +3,8 @@
 
 #include "defines.hpp"
 
+#include <memory>
+
 #include "c10/cuda/CUDAStream.h"
 
 #include "gpu_handler.hpp"
@@ -39,7 +41,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
     tmp_net->eval();
 
     for (auto device : devices)
-        networks.emplace_back(tmp_net->clone(*device));
+        networks.push_back(std::dynamic_pointer_cast<Net>(tmp_net->clone(*device)));
     
     #ifndef NDEBUG
     std::fprintf(stderr, "gpu_handler : finished loading network.\n");
