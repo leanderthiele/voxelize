@@ -132,12 +132,12 @@ struct gpu_process_item
 
     std::shared_ptr<c10::Device> device;
     std::shared_ptr<c10::cuda::CUDAStream> stream;
-    std::shared_ptr<Net> network;
+    Net network;
 
     gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                       std::shared_ptr<c10::Device> device_,
                       std::shared_ptr<c10::cuda::CUDAStream> stream_,
-                      std::shared_ptr<Net> network_);
+                      Net network_);
 
     bool started;
     

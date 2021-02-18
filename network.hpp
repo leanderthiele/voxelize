@@ -11,7 +11,7 @@
 #include "geometry.hpp"
 
 
-struct Net : public torch::nn::Cloneable<Net>
+struct NetImpl : public torch::nn::Cloneable<NetImpl>
 {
     // number of floats in each item in a batch
     static constexpr size_t netw_item_size = 8;
@@ -25,7 +25,7 @@ struct Net : public torch::nn::Cloneable<Net>
     // fully connected layers
     std::vector<torch::nn::Linear> fc;
 
-    Net ();
+    NetImpl ();
 
     // need to override reset method to make this module cloneable
     void reset () override;
@@ -50,9 +50,11 @@ private :
     input_normalization_val (const T &cub, float R, size_t idx);
 };
 
+TORCH_MODULE(Net);
+
 // --- Implementation ---
 
-Net::Net ()
+NetImpl::NetImpl ()
 {// {{{
     reset();
     
@@ -60,7 +62,7 @@ Net::Net ()
 }// }}}
 
 void
-Net::reset ()
+NetImpl::reset ()
 {// {{{
     fc = std::vector<torch::nn::Linear>(Nhidden+1, torch::nn::Linear{nullptr});
     for (size_t ii=0UL; ii != Nhidden+1UL; ++ii)
@@ -74,7 +76,7 @@ Net::reset ()
 }// }}}
 
 torch::Tensor
-Net::forward (torch::Tensor &x)
+NetImpl::forward (torch::Tensor &x)
 {// {{{
     // go through the hidden layers
     for (size_t ii=0; ii != Nhidden; ++ii)
@@ -87,7 +89,7 @@ Net::forward (torch::Tensor &x)
 
 template<typename T>
 inline float
-Net::input_normalization_val (const T &cub, float R, size_t idx)
+NetImpl::input_normalization_val (const T &cub, float R, size_t idx)
 {// {{{
     if (idx == 0UL)
         return R;
@@ -101,7 +103,7 @@ Net::input_normalization_val (const T &cub, float R, size_t idx)
 
 template<typename T>
 inline void
-Net::input_normalization (std::array<float,3> &cub, float R, T out, bool do_rotations)
+NetImpl::input_normalization (std::array<float,3> &cub, float R, T out, bool do_rotations)
 {// {{{
     if (do_rotations)
         mod_rotations(cub);
@@ -111,7 +113,7 @@ Net::input_normalization (std::array<float,3> &cub, float R, T out, bool do_rota
 
 template<typename T>
 inline void
-Net::input_normalization (const float *data, T out)
+NetImpl::input_normalization (const float *data, T out)
 {// {{{
     float R = data[0];
     const float *cub = data+1;
@@ -120,7 +122,7 @@ Net::input_normalization (const float *data, T out)
 }// }}}
 
 inline void
-Net::input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations)
+NetImpl::input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations)
 {// {{{
     if (do_rotations)
         mod_rotations(cub);

@@ -30,7 +30,7 @@ class gpu_handler
 
     std::vector<std::shared_ptr<c10::Device>> devices;
     std::vector<std::vector<std::shared_ptr<c10::cuda::CUDAStream>>> streams;
-    std::vector<std::shared_ptr<Net>> networks;
+    std::vector<Net> networks;
 
 public :
     gpu_handler () = default;
@@ -38,7 +38,7 @@ public :
     gpu_handler (const std::string &network_file);
 
     // returns true if it was possible to find an idle stream
-    bool get_resource (std::shared_ptr<Net> &network,
+    bool get_resource (Net &network,
                        std::shared_ptr<c10::Device> &device,
                        std::shared_ptr<c10::cuda::CUDAStream> &stream);
 };// }}}

@@ -22,7 +22,7 @@ gpu_queue_item::gpu_queue_item ()
 {// {{{
     box_indices.reserve(reserv_size);
     weights.reserve(reserv_size * globals.dim);
-    network_inputs.reserve(reserv_size * Net::netw_item_size);
+    network_inputs.reserve(reserv_size * NetImpl::netw_item_size);
 }// }}}
 
 inline void
@@ -36,7 +36,7 @@ gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const
         weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // append the network inputs
-    Net::input_normalization(cub, R, network_inputs);
+    NetImpl::input_normalization(cub, R, network_inputs);
 }// }}}
 
 inline bool
@@ -141,7 +141,7 @@ cpu_queue_item::add_to_box ()
 
 gpu_batch_queue_item::gpu_batch_queue_item () :
     current_idx { 0 },
-    gpu_tensor { torch::empty( {batch_size, Net::netw_item_size},
+    gpu_tensor { torch::empty( {batch_size, NetImpl::netw_item_size},
                                device(torch::kCPU)
                                   .pinned_memory(true)
                                   .dtype(torch::kFloat32) ) },
@@ -178,9 +178,9 @@ gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
 
     // write data from this chunk into the batch
     for (size_t ii=0; ii != gpu_input->box_indices.size(); ++ii, ++current_idx)
-        for (size_t jj=0; jj != Net::netw_item_size; ++jj)
+        for (size_t jj=0; jj != NetImpl::netw_item_size; ++jj)
             gpu_tensor_accessor[current_idx][jj]
-                = gpu_input->network_inputs[ii*Net::netw_item_size+jj];
+                = gpu_input->network_inputs[ii*NetImpl::netw_item_size+jj];
 }// }}}
 #else // WORKERS_MAKE_BATCHES
 inline void
@@ -193,7 +193,7 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
         weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // write network inputs into tensor
-    Net::input_normalization(cub, R, gpu_tensor_accessor[current_idx]);
+    NetImpl::input_normalization(cub, R, gpu_tensor_accessor[current_idx]);
 
     ++current_idx;
 }// }}}
@@ -202,7 +202,7 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
 gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                                     std::shared_ptr<c10::Device> device_,
                                     std::shared_ptr<c10::cuda::CUDAStream> stream_,
-                                    std::shared_ptr<Net> network_) :
+                                    Net network_) :
     batch { batch_ },
     device { device_ },
     stream { stream_ },

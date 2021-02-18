@@ -31,7 +31,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
     #endif // NDEBUG
 
     // load the network onto the CPU
-    auto tmp_net = std::make_shared<Net>();
+    Net tmp_net;
     if (network_file != "NO_FILE")
         torch::load(tmp_net, network_file);
 
@@ -75,7 +75,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
 }// }}}
 
 inline bool
-gpu_handler::get_resource (std::shared_ptr<Net> &network,
+gpu_handler::get_resource (Net &network,
                            std::shared_ptr<c10::Device> &device,
                            std::shared_ptr<c10::cuda::CUDAStream> &stream)
 {// {{{
