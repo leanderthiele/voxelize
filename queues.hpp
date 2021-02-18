@@ -13,11 +13,12 @@
 #include <torch/torch.h>
 #include <c10/cuda/CUDAStream.h>
 #include <c10/cuda/CUDAGuard.h>
-#include <ATen/cuda/CUDAMultiStreamGuard.h>
+#include <ATen/cuda/CUDAEvent.h>
 
 #include "defines.hpp"
 #include "geometry.hpp"
 #include "network.hpp"
+#include "gpu_handler.hpp"
 
 // The different queues (items forward declared, implementation later in this file)
 struct cpu_queue_item;
@@ -130,20 +131,23 @@ struct gpu_process_item
 {// {{{
     std::shared_ptr<gpu_batch_queue_item> batch;
 
-    std::shared_ptr<c10::Device> device;
-    std::shared_ptr<c10::cuda::CUDAStream> stream;
-    std::shared_ptr<Net> network;
-
     gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                       std::shared_ptr<c10::Device> device_,
-                      std::shared_ptr<c10::cuda::CUDAStream> stream_,
+                      std::shared_ptr<StreamWState> stream_,
                       std::shared_ptr<Net> network_);
 
-    bool started;
+    void release_resources () const;
     
     void compute ();
 
-    bool is_done ();
+    bool is_done () const;
+
+private :
+    std::shared_ptr<c10::Device> device;
+    std::shared_ptr<StreamWState> stream;
+    std::shared_ptr<Net> network;
+
+    at::cuda::CUDAEvent finished_event;
 };// }}}
 
 

@@ -14,6 +14,7 @@
 #include "network.hpp"
 #include "queues.hpp"
 #include "globals.hpp"
+#include "gpu_handler.hpp"
 
 // --- Implementation ---
 
@@ -96,8 +97,10 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     }
     #endif // WORKERS_MAKE_BATCHES
 
-    // get the Tensor back to the CPU
-    gpu_result->gpu_tensor = gpu_result->gpu_tensor.to(torch::kCPU);
+    // check if we really have a CPU tensor
+    assert(gpu_result->gpu_tensor.device() == torch::kCPU);
+
+    // update the tensor accessor
     gpu_result->gpu_tensor_accessor = gpu_result->gpu_tensor.accessor<float,2>();
 
     // get the overlaps into this object, with the correct normalization
@@ -159,12 +162,12 @@ gpu_batch_queue_item::gpu_batch_queue_item () :
                                   .pinned_memory(true)
                                   .dtype(torch::kFloat32) ) },
     gpu_tensor_accessor { gpu_tensor.accessor<float,2>() }
-{
+{// {{{
     #ifdef WORKERS_MAKE_BATCHES
     box_indices.reserve(batch_size);
     weights.reserve(globals.dim * batch_size);
     #endif // WORKERS_MAKE_BATCHES
-}
+}// }}}
 
 #ifndef WORKERS_MAKE_BATCHES
 inline bool
@@ -175,9 +178,9 @@ gpu_batch_queue_item::is_full (size_t to_add)
 #else // WORKERS_MAKE_BATCHES
 inline bool
 gpu_batch_queue_item::is_full ()
-{
+{// {{{
     return box_indices.size() == batch_size;
-}
+}// }}}
 #endif // WORKERS_MAKE_BATCHES
 
 #ifndef WORKERS_MAKE_BATCHES
@@ -214,23 +217,30 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
 
 gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                                     std::shared_ptr<c10::Device> device_,
-                                    std::shared_ptr<c10::cuda::CUDAStream> stream_,
+                                    std::shared_ptr<StreamWState> stream_,
                                     std::shared_ptr<Net> network_) :
     batch { batch_ },
     device { device_ },
     stream { stream_ },
     network { network_ },
-    started { false }
-{ }
+    finished_event { }
+{// {{{
+    // perform the computation (asynchronously)
+    compute();
+}// }}}
+
+inline void
+gpu_process_item::release_resources () const
+{// {{{
+    assert(is_done());
+    stream->set_busy(false);
+}// }}}
 
 inline bool
-gpu_process_item::is_done ()
+gpu_process_item::is_done () const
 {// {{{
-    #ifndef STREAMISDONE_TRUE
-    return started && stream->query();
-    #else // STREAMISDONE_TRUE
-    return true;
-    #endif // STREAMISDONE_TRUE
+    // TODO not sure about this!
+    return finished_event.isCreated() && finished_event.query();
 }// }}}
 
 inline void
@@ -238,44 +248,21 @@ gpu_process_item::compute ()
 {// {{{
     assert(batch->gpu_tensor.is_pinned());
 
-    while (true)
     {
-        #ifdef CHECK_FOR_MEM
-        // figure out whether we have enough memory available
-        int gpu_id = device->index();
-        cudaSetDevice(gpu_id);
-        
-        size_t free_mem, total_mem;
-        if (cudaMemGetInfo(&free_mem, &total_mem) != cudaSuccess)
-        {
-            std::fprintf(stderr, "Encountered CUDA Error in gpu_process_item::compute().\n");
-            continue;
-        }
-        
-        if (batch->gpu_tensor.nbytes() > 0.8*free_mem)
-            continue;
-        #endif // CHECK_FOR_MEM
+        // establish a Stream context
+        c10::cuda::CUDAStreamGuard guard (*stream);
 
-        #ifdef TRY_COMPUTE
-        try
-        {
-        #endif // TRY_COMPUTE
-            // establish a Stream context
-            at::cuda::CUDAMultiStreamGuard guard (*stream);
+        // push the data to the GPU (non-blocking)
+        batch->gpu_tensor = batch->gpu_tensor.to(*device, /*non_blocking=*/true);
 
-            // push the data to the GPU (non-blocking)
-            batch->gpu_tensor = batch->gpu_tensor.to(*device, true);
+        // pass the data through the network
+        batch->gpu_tensor = network->forward(batch->gpu_tensor);
 
-            batch->gpu_tensor = network->forward(batch->gpu_tensor);
+        // push the data to the CPU (non-blocking)
+        batch->gpu_tensor = batch->gpu_tensor.to(torch::kCPU, /*non_blocking=*/true);
 
-            break;
-        #ifdef TRY_COMPUTE
-        }
-        catch (c10::Error &e)
-        {
-            continue;
-        }
-        #endif // TRY_COMPUTE
+        // record that we are done here
+        finished_event.record();
     }
 }// }}}
 

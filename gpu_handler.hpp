@@ -20,6 +20,24 @@
 
 #include "network.hpp"
 
+// a wrapper around a CUDA Stream that captures
+// whether the stream can be used for computations
+// of whether it is currently busy
+class StreamWState : public c10::cuda::CUDAStream
+{// {{{
+    bool is_busy = false; 
+public :
+    void set_busy (bool new_value)
+    {
+        assert(new_value != is_busy);
+        is_busy = new_value;
+    }
+    bool get_busy () const
+    {
+        return is_busy;
+    }
+};// }}}
+
 class gpu_handler
 {// {{{
     // number of available GPU's
@@ -29,7 +47,7 @@ class gpu_handler
     size_t current_gpu;
 
     std::vector<std::shared_ptr<c10::Device>> devices;
-    std::vector<std::vector<std::shared_ptr<c10::cuda::CUDAStream>>> streams;
+    std::vector<std::vector<std::shared_ptr<StreamWState>>> streams;
     std::vector<std::shared_ptr<Net>> networks;
 
 public :
@@ -38,9 +56,10 @@ public :
     gpu_handler (const std::string &network_file);
 
     // returns true if it was possible to find an idle stream
-    bool get_resource (std::shared_ptr<Net> &network,
+    bool get_resource (size_t nbytes,
+                       std::shared_ptr<Net> &network,
                        std::shared_ptr<c10::Device> &device,
-                       std::shared_ptr<c10::cuda::CUDAStream> &stream);
+                       std::shared_ptr<StreamWState> &stream);
 };// }}}
 
 #endif // GPU_HANDLER_HPP

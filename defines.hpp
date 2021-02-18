@@ -39,12 +39,6 @@
 //  --- currently : not sure! (but may be better)
 #define RANDOM_STREAM
 
-// simply return true when a stream is queried.
-// Naively, I would think this would result in a synchronize,
-// but maybe that's not the case.
-//  --- currently : not sure!
-#define STREAMISDONE_TRUE
-
 // check whether there's enough free memory before pushing a
 // new batch to the GPU
 //  --- currently : not sure!

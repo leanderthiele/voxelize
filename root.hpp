@@ -87,10 +87,13 @@ check_gpu_batch_queue ()
 
         std::shared_ptr<Net> network_ptr;
         std::shared_ptr<c10::Device> device_ptr;
-        std::shared_ptr<c10::cuda::CUDAStream> stream_ptr;
+        std::shared_ptr<StreamWState> stream_ptr;
+
+        // figure out how much memory we'd need
+        size_t nbytes = gpu_batch_queue_item_ptr->gpu_tensor.nbytes();
 
         // find a stream for this calculation
-        if (!globals.gpu.get_resource(network_ptr, device_ptr, stream_ptr))
+        if (!globals.gpu.get_resource(nbytes, network_ptr, device_ptr, stream_ptr))
             // continue execution if we cannot find a resource
             return;
 
@@ -98,14 +101,11 @@ check_gpu_batch_queue ()
         #ifdef MULTI_ROOT
         #   pragma omp critical (GPU_Process_List_Critical)
         #endif // MULTI_ROOT
-        {
-            globals.gpu_process_list
-                .emplace_front(new gpu_process_item(gpu_batch_queue_item_ptr,
-                                                    device_ptr,
-                                                    stream_ptr,
-                                                    network_ptr));
-            globals.gpu_process_list.front()->compute();
-        }
+        globals.gpu_process_list
+            .emplace_front(new gpu_process_item(gpu_batch_queue_item_ptr,
+                                                device_ptr,
+                                                stream_ptr,
+                                                network_ptr));
     }
 }// }}}
 
@@ -130,6 +130,10 @@ check_gpu_process_list ()
     // if we found finished stuff in the GPU process list, do some work
     if (gpu_process_item_ptr)
     {
+        // release the resources that this process item had acquired
+        // (in practice, this frees the stream for other work)
+        gpu_process_item_ptr->release_resources();
+
         // construct a new CPU process item
         cpu_queue_item_ptr.reset(new cpu_queue_item(gpu_process_item_ptr->batch));
 
