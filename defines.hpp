@@ -2,7 +2,7 @@
 #define DEFINES_HPP
 
 // do not run asserts and get rid of some print statements
-#define NDEBUG
+// #define NDEBUG
 
 // produce code that is needed for testing,
 // e.g. main in voxelize_gpu.cpp
