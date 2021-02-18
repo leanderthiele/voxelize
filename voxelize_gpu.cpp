@@ -5,6 +5,10 @@
 #include <string>
 #include <omp.h>
 
+#include "cuda.h"
+#include "cuda_runtime_api.h"
+#include "cuda_profiler_api.h"
+
 #include "geometry.hpp"
 #include "globals.hpp"
 #include "root.hpp"
@@ -26,6 +30,10 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
                       radii, field, box, network_file);
+
+    #ifndef NDEBUG
+    cudaProfilerStart();
+    #endif // NDEBUG
 
     // split into two threads: root and workers
     #ifdef EXTRA_ROOT_ADD
@@ -50,6 +58,10 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
         #pragma omp section
         workers_process();
     }
+
+    #ifndef NDEBUG
+    cudaProfilerStop();
+    #endif // NDEBUG
 
     #ifdef COUNT
     size_t gpu_process_items = 0;
