@@ -250,7 +250,7 @@ gpu_process_item::compute ()
 
     {
         // establish a Stream context
-        c10::cuda::CUDAStreamGuard guard (*stream);
+        c10::cuda::CUDAStreamGuard guard (stream->cstream);
 
         // push the data to the GPU (non-blocking)
         batch->gpu_tensor = batch->gpu_tensor.to(*device, /*non_blocking=*/true);

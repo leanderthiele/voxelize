@@ -23,10 +23,26 @@
 // a wrapper around a CUDA Stream that captures
 // whether the stream can be used for computations
 // of whether it is currently busy
-class StreamWState : public c10::cuda::CUDAStream
+class StreamWState
 {// {{{
-    bool is_busy = false; 
+    bool is_busy; 
 public :
+    c10::cuda::CUDAStream cstream;
+
+    StreamWState (size_t device_idx, bool high_priority=false) :
+        is_busy { false },
+        cstream { c10::cuda::getStreamFromPool(high_priority, device_idx) }
+    { }
+    bool operator==(const StreamWState &other) const
+    {
+        // use the overloaded == operator from the CUDAStream wrapper
+        return cstream == other.cstream;
+    }
+    bool operator!=(const StreamWState &other) const
+    {
+        // use the overloaded != operator from the CUDAStream wrapper
+        return cstream != other.cstream;
+    }
     void set_busy (bool new_value)
     {
         assert(new_value != is_busy);

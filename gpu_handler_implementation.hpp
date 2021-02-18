@@ -60,15 +60,15 @@ gpu_handler::gpu_handler (const std::string &network_file)
     streams.resize(Ngpu);
     for (size_t ii=0; ii != Ngpu; ++ii)
     {
-        auto tmp_stream = c10::cuda::getStreamFromPool(false, ii);
+        auto tmp_stream = StreamWState(ii);
 
         // store the first stream
-        streams[ii].push_back(std::make_shared<c10::cuda::CUDAStream>(tmp_stream));
+        streams[ii].push_back(std::make_shared<StreamWState>(tmp_stream));
 
         // loop until we find that we're given the initial stream again
-        while ((tmp_stream = c10::cuda::getStreamFromPool(false, ii))
+        while ((tmp_stream = StreamWState(ii))
                != *streams[ii][0])
-            streams[ii].push_back(std::make_shared<c10::cuda::CUDAStream>(tmp_stream));
+            streams[ii].push_back(std::make_shared<StreamWState>(tmp_stream));
 
         #ifndef NDEBUG
         std::fprintf(stderr, "gpu_handler : Found %lu streams on device #%lu.\n",
