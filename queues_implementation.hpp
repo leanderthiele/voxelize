@@ -102,7 +102,10 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
 
     // get the overlaps into this object, with the correct normalization
     for (size_t ii=0; ii != Nitems; ++ii)
+    {
+        assert(gpu_result->gpu_tensor_accessor[ii][0] >= 0.0F);
         overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
+    }
 }// }}}
 
 inline void
