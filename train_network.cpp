@@ -53,7 +53,7 @@ int main ()
     load_vec(inputs, in_fname, in_stride);
     load_vec(outputs, out_fname, out_stride);
 
-    Net net;
+    auto net = std::make_shared<Net>();
     if (gpu_avail)
         net->to(*device_ptr);
 
@@ -138,7 +138,7 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
                         .device(torch::DeviceType::CPU)
                         .pinned_memory(gpu_avail);
 
-    torch::Tensor in = torch::empty({batchsize, NetImpl::netw_item_size}, opt);
+    torch::Tensor in = torch::empty({batchsize, Net::netw_item_size}, opt);
     torch::Tensor out = torch::empty({batchsize, 1}, opt);
 
     auto in_acc = in.accessor<float,2>();
@@ -147,7 +147,7 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
     for (size_t ii=0; ii != batchsize; ++ii, current_idx=(current_idx+1)%Nsamples)
     {
         const float *in_data = inputs.data() + current_idx*in_stride;
-        NetImpl::input_normalization(in_data, in_acc[ii]);
+        Net::input_normalization(in_data, in_acc[ii]);
 
         out_acc[ii][0] = outputs[current_idx];
     }

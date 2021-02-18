@@ -93,7 +93,7 @@ check_gpu_batch_queue ()
         ++processed_batches;
         #endif // COUNT
 
-        Net network_ptr;
+        std::shared_ptr<Net> network_ptr;
         std::shared_ptr<c10::Device> device_ptr;
         std::shared_ptr<c10::cuda::CUDAStream> stream_ptr;
 
