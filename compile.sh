@@ -13,6 +13,7 @@ g++ -std=c++17 -O3 -g3 \
     -I${CUDNN}/include \
     -o $1 $1.cpp \
     -L${TORCH}/lib \
+    -L${CUDA}/lib64 \
     -L${CUDNN}/lib64 \
     -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart \
     -lhdf5 -lhdf5_cpp \
