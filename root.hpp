@@ -107,15 +107,19 @@ check_gpu_batch_queue ()
             return;
         }
 
-        // if a stream has been found, start a GPU process
+        // if a stream has been found, start a GPU process,
+        // which is implicitly done by the gpu_process_item constructor.
+        // We append the new gpu_process_item to the end of the list,
+        // so that looping through the list in check_gpu_process_list()
+        // gives a finished process early.
         #ifdef MULTI_ROOT
         #   pragma omp critical (GPU_Process_List_Critical)
         #endif // MULTI_ROOT
         globals.gpu_process_list
-            .emplace_front(new gpu_process_item(gpu_batch_queue_item_ptr,
-                                                device_ptr,
-                                                stream_ptr,
-                                                network_ptr));
+            .emplace_back(new gpu_process_item(gpu_batch_queue_item_ptr,
+                                               device_ptr,
+                                               stream_ptr,
+                                               network_ptr));
     }
 }// }}}
 

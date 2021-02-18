@@ -5,7 +5,7 @@
 #include <array>
 #include <vector>
 #include <queue>
-#include <forward_list>
+#include <list>
 #include <memory>
 #include <cmath>
 #include <algorithm>
@@ -42,7 +42,7 @@ typedef std::queue<std::shared_ptr<gpu_batch_queue_item>>    gpu_batch_queue_t;
 
 // lives on root memory, root inserts
 // Working along the list means constructing cpu_queue_items
-typedef std::forward_list<std::shared_ptr<gpu_process_item>> gpu_process_list_t;
+typedef std::list<std::shared_ptr<gpu_process_item>>         gpu_process_list_t;
 
 #ifndef WORKERS_MAKE_BATCHES
 struct gpu_queue_item
