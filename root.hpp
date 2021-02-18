@@ -94,8 +94,18 @@ check_gpu_batch_queue ()
 
         // find a stream for this calculation
         if (!globals.gpu.get_resource(nbytes, network_ptr, device_ptr, stream_ptr))
+        {
+            // append this batch to the GPU -- we do a preliminary pop in the previous
+            // critical section since we expect that in the majority of cases
+            // we'll be able to obtain a resource
+            #ifdef MULTI_ROOT
+            #   pragma omp critical (GPU_Batch_Queue_Critical)
+            #endif // MULTI_ROOT
+            globals.gpu_batch_queue.push(gpu_batch_queue_item_ptr);
+
             // continue execution if we cannot find a resource
             return;
+        }
 
         // if a stream has been found, start a GPU process
         #ifdef MULTI_ROOT
