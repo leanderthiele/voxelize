@@ -112,7 +112,13 @@ gpu_handler::get_resource (size_t nbytes,
             std::fprintf(stderr, "Unable to read device memory state!\n");
             break;
         }
-        gpus_free.push_back(nbytes < 0.8*free_mem);
+
+        // in general, we don't want batches that are too large
+        assert(nbytes < 0.3 * total_mem);
+
+        bool enough_mem = nbytes < 0.8*free_mem;
+
+        gpus_free.push_back(enough_mem);
     }
     #endif // CHECK_FOR_MEM
 

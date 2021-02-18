@@ -160,7 +160,8 @@ gpu_batch_queue_item::gpu_batch_queue_item () :
     gpu_tensor { torch::empty( {batch_size, Net::netw_item_size},
                                device(torch::kCPU)
                                   .pinned_memory(true)
-                                  .dtype(torch::kFloat32) ) },
+                                  .dtype(torch::kFloat32)
+                                  .requires_grad(false) ) },
     gpu_tensor_accessor { gpu_tensor.accessor<float,2>() }
 {// {{{
     #ifdef WORKERS_MAKE_BATCHES
