@@ -103,6 +103,11 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     // get the overlaps into this object, with the correct normalization
     for (size_t ii=0; ii != Nitems; ++ii)
     {
+        #ifndef NDEBUG
+        if (gpu_result->gpu_tensor_accessor[ii][0] < 0.0F)
+            std::fprintf(stderr, "Negative network output : %.4e\n",
+                                 gpu_result->gpu_tensor_accessor[ii][0]);
+        #endif
         assert(gpu_result->gpu_tensor_accessor[ii][0] >= 0.0F);
         overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
     }
@@ -137,11 +142,11 @@ cpu_queue_item::add_to_box ()
         #pragma loop_count (1, 2, 3)
         for (int64_t dd=0; dd != globals.dim; ++dd)
         {
+            assert(overlaps[ii] >= 0.0F);
+
             #if defined(MULTI_ROOT) && !defined(EXTRA_ROOT_ADD)
             #   pragma omp atomic
             #endif // MULTI_ROOT, EXTRA_ROOT_ADD
-            assert(weights[ii*globals.dim+dd] >= 0.0F); // FIXME this is just for debugging, weights can be negative in general !!!
-            assert(overlaps[ii] >= 0.0F);
             globals.box[globals.dim*box_indices[ii]+dd]
                 += weights[ii*globals.dim+dd] * overlaps[ii];
         }
@@ -232,10 +237,6 @@ inline void
 gpu_process_item::compute ()
 {// {{{
     assert(batch->gpu_tensor.is_pinned());
-
-    #ifndef NDEBUG
-    std::fprintf(stderr, "in gpu_process_item::compute(), trying to compute.\n");
-    #endif
 
     while (true)
     {
