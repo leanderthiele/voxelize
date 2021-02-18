@@ -1,3 +1,4 @@
+#   include <cstdio>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -9,7 +10,6 @@
 #include "workers.hpp"
 
 #ifdef TESTS
-#   include <cstdio>
 #   include <cstdlib>
 #   include <cmath>
 #   include <chrono>
@@ -82,6 +82,8 @@ main ()
     
     int64_t box_N = 256;
     float *box = (float *)std::malloc(box_N * box_N * box_N * sizeof(float));
+    for (size_t ii=0; ii != box_N * box_N * box_N; ++ii)
+        box[ii] = 0.0F;
 
     auto t1 = std::chrono::steady_clock::now();
 
@@ -93,6 +95,12 @@ main ()
     std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
 
     std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
+
+    {
+        auto f = std::fopen("box.bin", "wb");
+        std::fwrite(box, sizeof(float), box_N*box_N*box_N, f);
+        std::fclose(f);
+    }
 
     return 0;
 }
