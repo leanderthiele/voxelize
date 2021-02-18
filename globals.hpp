@@ -1,6 +1,8 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
+#include "defines.hpp"
+
 #include <string>
 #include <omp.h>
 
@@ -9,6 +11,9 @@
 
 struct Globals
 {
+    // gpu handling class
+    gpu_handler gpu;
+
     // communicate to root that workers are finished with all
     // computations
     bool workers_finished = false;
@@ -34,9 +39,6 @@ struct Globals
           *field,
           *box;
 
-    // gpu handling class
-    gpu_handler gpu;
-
     // queues that need to be accessed by all threads
     cpu_queue_t cpu_queue;
     #ifndef WORKERS_MAKE_BATCHES
@@ -59,27 +61,32 @@ struct Globals
 Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
                   float *coords_, float *radii_, float *field_, float *box_,
                   char *network_file_) :
+    gpu { std::string(network_file_) },
+
     Nthreads_tot { omp_get_max_threads() },
-    Nthreads_root_gpu { 2 },
+
+    #ifdef MULTI_ROOT
+    Nthreads_root_gpu { 2 * (int)torch::cuda::device_count() },
+    #else // MULTI_ROOT
+    Nthreads_root_gpu { 1 },
+    #endif // MULTI_ROOT
+
     #ifdef EXTRA_ROOT_ADD
     Nthreads_root_add { 1 },
     #else // EXTRA_ROOT_ADD
     Nthreads_root_add { 0 },
     #endif // EXTRA_ROOT_ADD
+
     #ifdef MULTI_WORKERS
     Nthreads_workers { Nthreads_tot - Nthreads_root_gpu - Nthreads_root_add },
     #else // MULTI_WORKERS
     Nthreads_workers { 1 },
     #endif // MULTI_WORKERS
+
     Nparticles { Nparticles_ }, box_N { box_N_ }, dim { dim_ }, box_L { box_L_ },
     box_a { box_L / (float)(box_N) },
-    coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ },
-    gpu { std::string(network_file_) }
-{
-    #ifndef MULTI_ROOT
-    assert(Nthreads_root_gpu == 1);
-    #endif // MULTI_ROOT
-}
+    coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ }
+{ }
 
 
 #endif // GLOBALS_HPP

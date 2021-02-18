@@ -1,7 +1,10 @@
 #ifndef GPU_HANDLER_IMPLEMENTATION_HPP
 #define GPU_HANDLER_IMPLEMENTATION_HPP
 
+#include "defines.hpp"
+
 #include "c10/cuda/CUDAStream.h"
+
 #include "gpu_handler.hpp"
 #include "globals.hpp"
 
@@ -27,23 +30,16 @@ gpu_handler::gpu_handler (const std::string &network_file)
     std::fprintf(stderr, "gpu_handler : started loading network.\n");
     #endif // NDEBUG
 
+    // load the network onto the CPU
+    auto tmp_net = std::make_shared<Net>();
+    if (network_file != "NO_FILE")
+        torch::load(tmp_net, network_file);
+
+    // we want to evaluate the network
+    tmp_net->eval();
+
     for (auto device : devices)
-    {
-        // TODO this current solution requires disk I/O for each device,
-        //      but at the moment I can't figure out how the torch::Module::clone thing
-        //      works
-        networks.emplace_back(new Net);
-
-        // In debugging mode, we give the possibility to not load a network from disk
-        if (network_file != "NO_FILE")
-            torch::load(networks.back(), network_file);
-
-        // set to evaluation (as opposed to train) mode
-        networks.back()->eval();
-
-        // push to the current device
-        networks.back()->to(*device);
-    }
+        networks.emplace_back(tmp_net->clone(*device));
     
     #ifndef NDEBUG
     std::fprintf(stderr, "gpu_handler : finished loading network.\n");
@@ -83,6 +79,8 @@ gpu_handler::get_resource (std::shared_ptr<Net> &network,
                            std::shared_ptr<c10::Device> &device,
                            std::shared_ptr<c10::cuda::CUDAStream> &stream)
 {// {{{
+    // NOTE : this is not exactly thread-safe, but as long as we get
+    //        some numbers we're ok, good randomness is not required here
     static std::default_random_engine rng;
     static std::uniform_int_distribution<size_t> dist(0);
 

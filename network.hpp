@@ -10,10 +10,8 @@
 
 #include "geometry.hpp"
 
-// TODO implement the network
 
-
-struct Net : torch::nn::Module
+struct Net : public torch::nn::Cloneable<Net>
 {
     // number of floats in each item in a batch
     static constexpr size_t netw_item_size = 8;
@@ -28,6 +26,9 @@ struct Net : torch::nn::Module
     std::vector<torch::nn::Linear> fc;
 
     Net ();
+
+    // need to override reset method to make this module cloneable
+    void reset () override;
 
     torch::Tensor forward (torch::Tensor &x);
 
@@ -51,9 +52,17 @@ private :
 
 // --- Implementation ---
 
-Net::Net () :
-    fc { Nhidden+1, torch::nn::Linear{nullptr} }
+Net::Net ()
 {// {{{
+    reset();
+    
+    assert(fc.size() == Nhidden+1);
+}// }}}
+
+void
+Net::reset ()
+{// {{{
+    fc = std::vector<torch::nn::Linear>(Nhidden+1, torch::nn::Linear{nullptr});
     for (size_t ii=0UL; ii != Nhidden+1UL; ++ii)
         fc[ii] = register_module("fc" + std::to_string(ii),
                                  torch::nn::Linear((ii==0UL)
@@ -62,8 +71,6 @@ Net::Net () :
                                                    (ii==Nhidden)
                                                    ? 1
                                                    : Nneurons));
-    
-    assert(fc.size() == Nhidden+1);
 }// }}}
 
 torch::Tensor

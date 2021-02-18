@@ -1,6 +1,8 @@
 #ifndef GPU_HANDLER_HPP
 #define GPU_HANDLER_HPP
 
+#include "defines.hpp"
+
 #include <vector>
 #include <memory>
 #include <utility>

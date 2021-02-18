@@ -1,9 +1,14 @@
 #ifndef QUEUES_IMPLEMENTATION_HPP
 #define QUEUES_IMPLEMENTATION_HPP
 
+#include "defines.hpp"
+
 #ifndef NDEBUG
 #   include <cstdio>
 #endif
+
+#include "cuda.h"
+#include "cuda_runtime_api.h"
 
 #include "geometry.hpp"
 #include "network.hpp"
@@ -18,7 +23,6 @@ gpu_queue_item::gpu_queue_item ()
     box_indices.reserve(reserv_size);
     weights.reserve(reserv_size * globals.dim);
     network_inputs.reserve(reserv_size * Net::netw_item_size);
-    vol_norm.reserve(reserv_size);
 }// }}}
 
 inline void
@@ -29,10 +33,7 @@ gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const
 
     #pragma loop_count (1, 2, 3)
     for (int ii=0; ii != globals.dim; ++ii)
-        weights.push_back(weight[ii]);
-
-    // add the volume normalization
-    vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
+        weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // append the network inputs
     Net::input_normalization(cub, R, network_inputs);
@@ -52,8 +53,6 @@ cpu_queue_item::cpu_queue_item ()
     overlaps.reserve(reserv_size);
 }// }}}
 
-// TODO ifdef WORKERS_MAKE_BATCHES, it may not be necessary to have this extra type,
-//                                  but it is definitely more convenient ...
 cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result)
 #ifdef WORKERS_MAKE_BATCHES
     : box_indices { gpu_result->box_indices },
@@ -93,7 +92,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
         for (size_t ii=0; ii != x->box_indices.size(); ++ii)
             #pragma loop_count (1, 2, 3)
             for (int64_t dd = 0; dd != globals.dim; ++dd)
-                weights.push_back(x->weights[ii*globals.dim+dd] * x->vol_norm[ii]);
+                weights.push_back(x->weights[ii*globals.dim+dd]);
     }
     #endif // WORKERS_MAKE_BATCHES
 
@@ -103,12 +102,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
 
     // get the overlaps into this object, with the correct normalization
     for (size_t ii=0; ii != Nitems; ++ii)
-        #ifndef WORKERS_MAKE_BATCHES
         overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
-        #else // WORKERS_MAKE_BATCHES
-        overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]
-                           * gpu_result->vol_norm[ii]);
-        #endif // WORKERS_MAKE_BATCHES
 }// }}}
 
 inline void
@@ -156,7 +150,6 @@ gpu_batch_queue_item::gpu_batch_queue_item () :
     #ifdef WORKERS_MAKE_BATCHES
     box_indices.reserve(batch_size);
     weights.reserve(globals.dim * batch_size);
-    vol_norm.reserve(batch_size);
     #endif // WORKERS_MAKE_BATCHES
 }
 
@@ -197,9 +190,7 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
 
     #pragma loop_count (1, 2, 3)
     for (int ii=0; ii != globals.dim; ++ii)
-        weights.push_back(weight[ii]);
-
-    vol_norm.push_back(std::min(M_4PI_3f32*R*R*R, 1.0F));
+        weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // write network inputs into tensor
     Net::input_normalization(cub, R, gpu_tensor_accessor[current_idx]);
@@ -215,15 +206,18 @@ gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch
     batch { batch_ },
     device { device_ },
     stream { stream_ },
-    network { network_ }
+    network { network_ },
+    started { false }
 { }
 
 inline bool
 gpu_process_item::is_done ()
 {// {{{
-    // TODO FIXME for testing only!!!
-//    return true;
-    return stream->query();
+    #ifndef STREAMISDONE_TRUE
+    return started && stream->query();
+    #else // STREAMISDONE_TRUE
+    return true;
+    #endif // STREAMISDONE_TRUE
 }// }}}
 
 inline void
@@ -235,11 +229,28 @@ gpu_process_item::compute ()
     std::fprintf(stderr, "in gpu_process_item::compute(), trying to compute.\n");
     #endif
 
-    // try until we have memory available
-    // FIXME This doesn't work at the moment
     while (true)
+    {
+        #ifdef CHECK_FOR_MEM
+        // figure out whether we have enough memory available
+        int gpu_id = device->index();
+        cudaSetDevice(gpu_id);
+        
+        size_t free_mem, total_mem;
+        if (cudaMemGetInfo(&free_mem, &total_mem) != cudaSuccess)
+        {
+            std::fprintf(stderr, "Encountered CUDA Error in gpu_process_item::compute().\n");
+            continue;
+        }
+        
+        if (batch->gpu_tensor.nbytes() > 0.8*free_mem)
+            continue;
+        #endif // CHECK_FOR_MEM
+
+        #ifdef TRY_COMPUTE
         try
         {
+        #endif // TRY_COMPUTE
             // establish a Stream context
             at::cuda::CUDAMultiStreamGuard guard (*stream);
 
@@ -249,11 +260,14 @@ gpu_process_item::compute ()
             batch->gpu_tensor = network->forward(batch->gpu_tensor);
 
             break;
+        #ifdef TRY_COMPUTE
         }
         catch (c10::Error &e)
         {
             continue;
         }
+        #endif // TRY_COMPUTE
+    }
 }// }}}
 
 

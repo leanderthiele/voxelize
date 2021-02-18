@@ -15,6 +15,7 @@
 #include <c10/cuda/CUDAGuard.h>
 #include <ATen/cuda/CUDAMultiStreamGuard.h>
 
+#include "defines.hpp"
 #include "geometry.hpp"
 #include "network.hpp"
 
@@ -56,9 +57,6 @@ struct gpu_queue_item
     std::vector<int64_t> box_indices;
     std::vector<float>   weights;
     std::vector<float>   network_inputs;
-    std::vector<float>   vol_norm; // this is the volume normalization, used in the earlier implementation
-                                   // TODO -- when everything is working, we can merge this with the weights
-                                   //         vector, saving the memory
 
     // constructor
     gpu_queue_item ();
@@ -83,8 +81,6 @@ struct gpu_batch_queue_item
     #else // WORKERS_MAKE_BATCHES
     std::vector<int64_t> box_indices;
     std::vector<float>   weights;
-    std::vector<float>   vol_norm; // TODO -- when everything is working,
-                                   //         we can merge this with the weights vector
     #endif // WORKERS_MAKE_BATCHES
 
     torch::Tensor gpu_tensor;
@@ -142,6 +138,8 @@ struct gpu_process_item
                       std::shared_ptr<c10::Device> device_,
                       std::shared_ptr<c10::cuda::CUDAStream> stream_,
                       std::shared_ptr<Net> network_);
+
+    bool started;
     
     void compute ();
 

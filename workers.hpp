@@ -1,6 +1,8 @@
 #ifndef WORKERS_HPP
 #define WORKERS_HPP
 
+#include "defines.hpp"
+
 #include <queue>
 #include <memory>
 #include <omp.h>

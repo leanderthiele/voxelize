@@ -1,6 +1,8 @@
 #ifndef ROOT_HPP
 #define ROOT_HPP
 
+#include "defines.hpp"
+
 #include <memory>
 #include <omp.h>
 
