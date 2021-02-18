@@ -20,12 +20,8 @@
 void
 voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
              float *coords, float *radii, float *field, float *box,
-             char *network_file)
+             const char *network_file)
 {
-    // TODO we can remove this later when we have a trained network
-    char no_file_flag[] = "NO_FILE";
-    network_file = no_file_flag;
-
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
                       radii, field, box, network_file);
@@ -69,6 +65,7 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 int
 main ()
 {
+    const std::string net_fname = "network.pt";
     const std::string fname = "/projects/QUIJOTE/Leander/SU/hydro_test/seed1/0.00000000p/Arepo/snap_004.hdf5";
     const size_t PartType = 0;
     auto fptr = std::make_shared<H5::H5File>(fname, H5F_ACC_RDONLY);
@@ -88,7 +85,8 @@ main ()
 
     auto t1 = std::chrono::steady_clock::now();
 
-    voxelize_gpu(Nparticles, box_N, 1, box_L, coordinates, radii, density, box, nullptr);
+    voxelize_gpu(Nparticles, box_N, 1, box_L,
+                 coordinates, radii, density, box, net_fname.c_str());
 
     auto t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = t2 - t1;

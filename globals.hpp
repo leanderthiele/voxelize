@@ -53,14 +53,14 @@ struct Globals
 
     Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
              float *coords_, float *radii_, float *field_, float *box_,
-             char *network_file_);
+             const char *network_file_);
 } globals;
 
 // --- Implementation ---
 
 Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
                   float *coords_, float *radii_, float *field_, float *box_,
-                  char *network_file_) :
+                  const char *network_file_) :
     gpu { std::string(network_file_) },
 
     Nthreads_tot { omp_get_max_threads() },
