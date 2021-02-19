@@ -209,10 +209,14 @@ workers_process ()
                                 overlap = exact_overlap(cub, R);
 
                                 #ifdef COUNT
+                                #ifndef CPU_ONLY
                                 if (R < globals.gpu.Rmin)
                                     ++exact_calculations_lo;
                                 else
                                     ++exact_calculations_hi;
+                                #else // CPU_ONLY
+                                ++exact_calculations_hi;
+                                #endif // CPU_ONLY
                                 #endif // COUNT
                             #ifndef CPU_ONLY
                             }
