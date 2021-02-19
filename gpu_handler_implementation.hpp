@@ -107,8 +107,6 @@ gpu_handler::get_resource (size_t nbytes,
     #ifdef MULTI_ROOT
     #   pragma omp critical (Get_Resource_Critical)
     {
-    // TODO
-    std::fprintf(stderr, "Thread %d entered critical region.\n", omp_get_thread_num());
     #endif // MULTI_ROOT
 
         #ifdef CHECK_FOR_MEM
@@ -160,7 +158,7 @@ gpu_handler::get_resource (size_t nbytes,
                     // loop over streams on this GPU
                     for (size_t jj=0; jj != streams[tmp_current_gpu].size(); ++jj)
                         // add if idle
-                        if (!streams[ii][jj]->get_busy())
+                        if (!streams[tmp_current_gpu][jj]->get_busy())
                             idle_stream_indices[ii].second.push_back(jj);
                 }
 
@@ -213,8 +211,6 @@ gpu_handler::get_resource (size_t nbytes,
         #endif // CHECK_FOR_MEM
 
     #ifdef MULTI_ROOT
-    // TODO
-    std::fprintf(stderr, "Thread %d exited critical region.\n", omp_get_thread_num());
     } // Get_Resource_Critical
     #endif // MULTI_ROOT
 
