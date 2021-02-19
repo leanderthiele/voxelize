@@ -111,10 +111,7 @@ workers_process ()
 
     #ifdef MULTI_WORKERS
     #   ifdef COUNT
-    #       pragma omp parallel reduction(+:processed_numbers, \
-                                          +:trivial_calculations, \
-                                          +interpolations, \
-                                          +:exact_calculations)
+    #       pragma omp parallel reduction(+:processed_numbers,trivial_calculations,interpolations,exact_calculations)
     #   else // COUNT
     #       pragma omp parallel
     #   endif // COUNT
