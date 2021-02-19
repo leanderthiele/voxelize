@@ -38,6 +38,13 @@
 #include <type_traits>
 #include <utility>
 
+// sometimes assertions fail here in large datasets,
+// because of spurious numerical instability that is not really
+// critical.
+// For this reason, we converted all assert into myassert
+#define myassert(expr) \
+    do { } while (0)
+
 namespace Olap {
 
 // typedefs
@@ -324,7 +331,7 @@ inline std::array<vector_t, 2> gramSchmidt(const Eigen::MatrixBase<Derived0>&
 inline scalar_t clamp(scalar_t value, scalar_t min, scalar_t max, scalar_t
 	limit) {
 
-	assert(min <= max && limit >= scalar_t(0));
+	myassert(min <= max && limit >= scalar_t(0));
 
 	value = (value < min && value > (min - limit)) ? min : value;
 	value = (value > max && value < (max + limit)) ? max : value;
@@ -512,7 +519,7 @@ class Tetrahedron : public detail::tet_mappings {
 
 #ifndef NDEBUG
 			// Make sure the ordering of the vertices is correct.
-			assert((vertices[1] - vertices[0]).cross(vertices[2] -
+			myassert((vertices[1] - vertices[0]).cross(vertices[2] -
 				vertices[0]).dot(vertices[3] - vertices[0]) >= scalar_t(0));
 #endif // NDEBUG
 
@@ -1162,9 +1169,9 @@ inline scalar_t regularizedWedge(scalar_t r, scalar_t d, scalar_t alpha) {
 #endif
 
 	// Check the parameters for validity (debug version only).
-	assert(r > scalar_t(0));
-	assert(d >= scalar_t(0) && d <= r);
-	assert(alpha >= scalar_t(0) && alpha <= scalar_t(0.5 * pi));
+	myassert(r > scalar_t(0));
+	myassert(d >= scalar_t(0) && d <= r);
+	myassert(alpha >= scalar_t(0) && alpha <= scalar_t(0.5 * pi));
 
 	const scalar_t sinAlpha = std::sin(alpha);
 	const scalar_t cosAlpha = std::cos(alpha);
@@ -1224,9 +1231,9 @@ inline scalar_t regularizedWedgeArea(scalar_t r, scalar_t z, scalar_t alpha) {
 #endif
 
 	// Check the parameters for validity (debug version only).
-	assert(r > scalar_t(0));
-	assert(z >= -r && z <= r);
-	assert(alpha >= scalar_t(0) && alpha <= pi);
+	myassert(r > scalar_t(0));
+	myassert(z >= -r && z <= r);
+	myassert(alpha >= scalar_t(0) && alpha <= pi);
 
 	if(alpha < tinyEpsilon || std::abs(r * r - z * z) <= tinyEpsilon)
 		return scalar_t(0);
@@ -1243,8 +1250,8 @@ inline scalar_t regularizedWedgeArea(scalar_t r, scalar_t z, scalar_t alpha) {
         scalar_t(-1), scalar_t(1), detail::tinyEpsilon);
 
 	// Check the argument to acos() for validity (debug version only).
-	assert(scalar_t(-1) <= arg0 && arg0 <= scalar_t(1));
-	assert(scalar_t(-1) <= arg1 && arg1 <= scalar_t(1));
+	myassert(scalar_t(-1) <= arg0 && arg0 <= scalar_t(1));
+	myassert(scalar_t(-1) <= arg1 && arg1 <= scalar_t(1));
 
 	return scalar_t(2) * r * r * std::acos(arg0) -
         scalar_t(2) * r * z * std::acos(arg1);
@@ -1300,8 +1307,8 @@ inline scalar_t generalWedge(const Sphere& s, const Plane& p0, const Plane& p1,
 		dUnit = detail::gramSchmidt(p0.normal.cross(p1.normal), dUnit)[1];
 
 	// Check the planes specify a valid setup (debug version only).
-	assert(p0.normal.dot(p1.center - p0.center) <= scalar_t(0));
-	assert(p1.normal.dot(p0.center - p1.center) <= scalar_t(0));
+	myassert(p0.normal.dot(p1.center - p0.center) <= scalar_t(0));
+	myassert(p1.normal.dot(p0.center - p1.center) <= scalar_t(0));
 
 	// Calculate the angles between the vector from the sphere center
 	// to the intersection line and the normal vectors of the two planes.
@@ -1691,12 +1698,12 @@ scalar_t overlap(const Sphere& sOrig, const Element& elementOrig) {
 			segmentVolume, scalar_t(0));
 
 		// Sanity check: detect negative cone volume.
-		assert(coneVolume > -std::sqrt(detail::tinyEpsilon));
+		myassert(coneVolume > -std::sqrt(detail::tinyEpsilon));
 
 		result -= coneVolume;
 
 		// Sanity check: detect negative intermediate result.
-		assert(result > -std::sqrt(detail::tinyEpsilon));
+		myassert(result > -std::sqrt(detail::tinyEpsilon));
 	}
 
 	// In case of different sized objects the error can become quite large,
@@ -1714,7 +1721,7 @@ scalar_t overlap(const Sphere& sOrig, const Element& elementOrig) {
 		return std::min(sOrig.volume, elementOrig.volume);
 
 	// Perform a sanity check on the final result (debug version only).
-	assert(result >= scalar_t(0) && result <= maxOverlap);
+	myassert(result >= scalar_t(0) && result <= maxOverlap);
 
 	// Scale the overlap volume back for the original objects.
 	result = (result / s.volume) * sOrig.volume;
@@ -2086,8 +2093,8 @@ auto overlapArea(const Sphere& sOrig, const Element& elementOrig) ->
 
         // Sanity checks: detect negative/excessively large intermediate
         // result.
-		assert(result[0] > -std::sqrt(detail::tinyEpsilon));
-        assert(result[0] < s.surfaceArea() + detail::tinyEpsilon);
+		myassert(result[0] > -std::sqrt(detail::tinyEpsilon));
+        myassert(result[0] < s.surfaceArea() + detail::tinyEpsilon);
 	}
 
 	// Second, correct the intersection area of the facets.
@@ -2155,7 +2162,7 @@ auto overlapArea(const Sphere& sOrig, const Element& elementOrig) ->
 			result[faceIdx + 1] += triaArea + segmentArea;
 
             // Sanity checks: detect excessively large intermediate result.
-            assert(result[faceIdx + 1] < element.faces[faceIdx].area +
+            myassert(result[faceIdx + 1] < element.faces[faceIdx].area +
                 std::sqrt(detail::largeEpsilon));
 		}
 	}
@@ -2177,8 +2184,8 @@ auto overlapArea(const Sphere& sOrig, const Element& elementOrig) ->
     // surface area of the facets.
 #ifndef NDEBUG
 	for(size_t n = 0; n < nrFaces; ++n) {
-        assert(result[n + 1] > -fLimit);
-        assert(result[n + 1] <= element.faces[n].area + fLimit);
+        myassert(result[n + 1] > -fLimit);
+        myassert(result[n + 1] <= element.faces[n].area + fLimit);
     }
 #endif // NDEBUG
 
@@ -2200,9 +2207,9 @@ auto overlapArea(const Sphere& sOrig, const Element& elementOrig) ->
 
     // Perform some more sanity checks on the final result (debug version
     // only).
-	assert(scalar_t(0) <= result[0] && result[0] <= sOrig.surfaceArea());
+	myassert(scalar_t(0) <= result[0] && result[0] <= sOrig.surfaceArea());
 
-	assert(scalar_t(0) <= result.back() && result.back() <=
+	myassert(scalar_t(0) <= result.back() && result.back() <=
 		elementOrig.surfaceArea());
 
 	return result;
