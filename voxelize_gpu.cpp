@@ -150,7 +150,13 @@ main ()
     }
 
     voxelize_gpu(Nparticles, box_N, 1, box_L,
-                 coordinates, radii, density, box, net_fname.c_str());
+                 coordinates, radii, density, box,
+                 #ifndef CPU_ONLY
+                 net_fname.c_str()
+                 #else // CPU_ONLY
+                 nullptr
+                 #endif // CPU_ONLY
+                 );
 
     std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
 
