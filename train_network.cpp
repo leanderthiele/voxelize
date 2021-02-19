@@ -7,6 +7,7 @@
 
 #include <torch/torch.h>
 
+#include "file_names.hpp"
 #include "network.hpp"
 
 bool gpu_avail;
@@ -18,15 +19,18 @@ static constexpr size_t Nbatches_epoch = 100;
 
 static constexpr double learning_rate = 1e-3;
 
+// only for file naming purposes
+static float Rmin = -1.0F;
+static float Rmax = -1.0F;
+
 // auxiliary
 static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
 // file names
+// TODO
 static const std::string in_fname = "inputs.bin";
 static const std::string out_fname = "outputs.bin";
-static const std::string net_fname = "network.pt";
-static const std::string val_fname = "validation_loss.bin";
 
 // how many samples we have
 size_t Nsamples = 0;
@@ -52,6 +56,7 @@ int main ()
 
     load_vec(inputs, in_fname, in_stride);
     load_vec(outputs, out_fname, out_stride);
+    std::fprintf(stderr, "Loaded training data with Rmin=%.8e and Rmax=%.8e\n", Rmin, Rmax);
 
     auto net = std::make_shared<Net>();
     if (gpu_avail)
@@ -84,11 +89,11 @@ int main ()
     }
 
     // save network
-    torch::save(net, net_fname);
+    torch::save(net, get_fname("network", Rmin, Rmax, ".pt"));
 
     // save validation loss
     {
-        std::FILE *f = std::fopen(val_fname.c_str(), "wb");
+        std::FILE *f = std::fopen(get_fname("validation_loss", Rmin, Rmax, ".bin").c_str(), "wb");
         std::fwrite(validation_loss.data(), sizeof validation_loss[0], validation_loss.size(), f);
         std::fclose(f);
     }
@@ -111,8 +116,22 @@ void set_device ()
 void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 {// {{{
     std::FILE *f = std::fopen(fname.c_str(), "rb");
-    size_t Nel;
 
+    float this_Rmin;
+    std::fread(&this_Rmin, sizeof this_Rmin, 1, f);
+    if (Rmin < 0.0F)
+        Rmin = this_Rmin;
+    else
+        assert(std::fabs(this_Rmin-Rmin) < 1e-5);
+
+    float this_Rmax;
+    std::fread(&this_Rmax, sizeof this_Rmax, 1, f);
+    if (Rmax < 0.0F)
+        Rmax = this_Rmax;
+    else
+        assert(std::fabs(this_Rmax-Rmax) < 1e-5);
+
+    size_t Nel;
     std::fread(&Nel, sizeof Nel, 1, f);
     std::fprintf(stderr, "Loading %.2f MB from file %s\n", 1e-6 *(float)(Nel*sizeof(float)), fname.c_str());
 

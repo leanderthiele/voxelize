@@ -14,11 +14,12 @@ static constexpr size_t Nsamples = 1 << 26;
 static constexpr float  Rmin     = 0.1;
 static constexpr float  Rmax     = 10.0;
 
-static const std::string in_fname = "inputs.bin";
-static const std::string out_fname = "outputs.bin";
-
 std::vector<float> inputs;
 std::vector<float> outputs;
+
+// file names
+static const std::string in_fname = "inputs.bin";
+static const std::string out_fname = "outputs.bin";
 
 // draws random input, including the mod_reflections & mod_rotations
 std::pair<std::array<float,3>,float> generate_input (); 
@@ -128,6 +129,8 @@ void save_vec (const std::vector<float> &vec, const std::string &fname)
 {// {{{
     std::FILE *f = std::fopen(fname.c_str(), "wb");
     size_t Nel = vec.size();
+    std::fwrite(&Rmin, sizeof Rmin, 1, f);
+    std::fwrite(&Rmax, sizeof Rmax, 1, f);
     std::fwrite(&Nel, sizeof Nel, 1, f);
     std::fwrite(vec.data(), sizeof vec[0], Nel, f);
     std::fclose(f);

@@ -13,6 +13,7 @@
 
 #include "c10/cuda/CUDAStream.h"
 
+#include "file_names.hpp"
 #include "gpu_handler.hpp"
 #include "globals.hpp"
 
@@ -39,6 +40,9 @@ gpu_handler::gpu_handler (const std::string &network_file)
     #ifndef NDEBUG
     std::fprintf(stderr, "gpu_handler : started loading network.\n");
     #endif // NDEBUG
+
+    // get the interval in which the network is trustworthy from the filename
+    assert(read_fname(network_file, Rmin, Rmax));
 
     // load the network onto the CPU
     auto tmp_net = std::make_shared<Net>();

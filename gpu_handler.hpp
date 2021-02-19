@@ -82,6 +82,8 @@ class gpu_handler
     std::vector<std::shared_ptr<Net>> networks;
 
 public :
+    float Rmin, Rmax;
+
     gpu_handler () = default;
 
     gpu_handler (const std::string &network_file);
