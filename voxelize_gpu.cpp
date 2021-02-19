@@ -28,6 +28,7 @@
 //    If a particle has a radius falling outside this range, call the slow
 //    Olap::overlap routine to do the calculation.
 //    For diagnostics, count for how many particles this is the case.
+//    DONE
 //
 // 2) make GPU Handler a stand-alone pointer, which voxelize_gpu takes as
 //    an argument. This allows repeated calls of the routine without the need
@@ -35,6 +36,13 @@
 //
 // 3) template the whole thing on dimensionality, voxelize_gpu calls the
 //    appropriate template
+//
+// 4) have CPU_ONLY macro
+//    -- with the same number of CPUs, this is probably about 10 times slower
+//
+// 5) have SYNCHRONIZE macro
+//
+// 6) replace HYPOT calls
 
 void
 voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,

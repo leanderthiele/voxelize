@@ -28,7 +28,6 @@ static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
 // file names
-// TODO
 static const std::string in_fname = "inputs.bin";
 static const std::string out_fname = "outputs.bin";
 
@@ -43,6 +42,9 @@ void set_device ();
 
 // loads a binary file into a vector
 void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride);
+
+// saves a vector to binary file
+void save_vec (const std::vector<float> &vec, const std::string &fname);
 
 // gives a new sample, first is the input and second the target
 std::pair<torch::Tensor, torch::Tensor> draw_batch ();
@@ -88,15 +90,31 @@ int main ()
         std::fprintf(stderr, "epoch %lu / %lu\n", epoch_idx+1, Nepoch);
     }
 
+    // test the network
+    net->eval();
+    auto test_batch = draw_batch();
+    auto test_pred = net->forward(test_batch.first);
+    std::vector<float> R;
+    std::vector<float> targ;
+    std::vector<float> pred;
+    auto in_acc = test_batch.first.accessor<float,2>();
+    auto targ_acc = test_batch.second.accessor<float,2>();
+    auto pred_acc = test_pred.accessor<float,2>();
+    for (size_t ii=0; ii != batchsize; ++ii)
+    {
+        R.push_back(in_acc[ii][0]);
+        targ.push_back(targ_acc[ii][0]);
+        pred.push_back(pred_acc[ii][0]);
+    }
+    save_vec(R, "test_R.bin");
+    save_vec(targ, "test_targ.bin");
+    save_vec(pred, "test_pred.bin");
+
     // save network
     torch::save(net, get_fname("network", Rmin, Rmax, ".pt"));
 
     // save validation loss
-    {
-        std::FILE *f = std::fopen(get_fname("validation_loss", Rmin, Rmax, ".bin").c_str(), "wb");
-        std::fwrite(validation_loss.data(), sizeof validation_loss[0], validation_loss.size(), f);
-        std::fclose(f);
-    }
+    save_vec(validation_loss, get_fname("validation_loss", Rmin, Rmax, ".bin"));
 }// }}}
 
 void set_device ()
@@ -144,6 +162,13 @@ void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 
     std::fread(vec.data(), sizeof vec[0], Nel, f);
 
+    std::fclose(f);
+}// }}}
+
+void save_vec (const std::vector<float> &vec, const std::string &fname)
+{// {{{
+    auto f = std::fopen(fname.c_str(), "wb");
+    std::fwrite(vec.data(), sizeof vec[0], vec.size(), f);
     std::fclose(f);
 }// }}}
 
