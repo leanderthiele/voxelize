@@ -15,6 +15,7 @@
 #include "queues.hpp"
 #include "queues_implementation.hpp"
 #include "globals.hpp"
+#include "overlap_lft_double.hpp"
 
 // two smaller helper functions (unfortunately we don't seem to be able to template
 // them, because I don't know how to pass the names of the critical sections)
@@ -63,6 +64,29 @@ add_to_gpu_batch_queue_if_full (std::shared_ptr<gpu_batch_queue_item> &gpu_batch
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
 
+static inline float
+exact_overlap (const std::array<float,3> &cub, float R)
+{// {{{
+    Olap::Sphere Sph ( {0.0, 0.0, 0.0}, (Olap::scalar_t)R );
+
+    auto cub0 = (Olap::scalar_t)(cub[0]);
+    auto cub1 = (Olap::scalar_t)(cub[1]);
+    auto cub2 = (Olap::scalar_t)(cub[2]);
+
+    Olap::vector_t v0 {cub0, cub1, cub2};
+    Olap::vector_t v1 {cub0+1.0, cub1, cub2};
+    Olap::vector_t v2 {cub0+1.0, cub1+1.0, cub2};
+    Olap::vector_t v3 {cub0, cub1+1.0, cub2};
+    Olap::vector_t v4 {cub0, cub1, cub2+1.0};
+    Olap::vector_t v5 {cub0+1.0, cub1, cub2+1.0};
+    Olap::vector_t v6 {cub0+1.0, cub1+1.0, cub2+1.0};
+    Olap::vector_t v7 {cub0, cub1+1.0, cub2+1.0};
+
+    Olap::Hexahedron Hex {v0,v1,v2,v3,v4,v5,v6,v7};
+
+    return Olap::overlap(Sph, Hex);
+}// }}}
+
 static void
 workers_process ()
 {// {{{
@@ -79,12 +103,18 @@ workers_process ()
     #endif // NDEBUG
 
     #ifdef COUNT
-    uint64_t processed_numbers = 0UL;
+    uint64_t processed_numbers = 0UL,
+             trivial_calculations = 0UL,
+             interpolations = 0UL,
+             exact_calculations = 0UL;
     #endif // COUNT
 
     #ifdef MULTI_WORKERS
     #   ifdef COUNT
-    #       pragma omp parallel reduction(+:processed_numbers)
+    #       pragma omp parallel reduction(+:processed_numbers, \
+                                          +:trivial_calculations, \
+                                          +interpolations, \
+                                          +:exact_calculations)
     #   else // COUNT
     #       pragma omp parallel
     #   endif // COUNT
@@ -119,8 +149,6 @@ workers_process ()
             float *part_centre = globals.coords + 3UL*pp;
             float *weight = globals.field + globals.dim*pp;
 
-            // TODO it's possible that we need to put these in the inner
-            //      loops if one particle carries too much data with it
             add_to_cpu_queue_if_full(cpu_queue_item_ptr);
             #ifndef WORKERS_MAKE_BATCHES
             add_to_gpu_queue_if_full(gpu_queue_item_ptr);
@@ -161,18 +189,44 @@ workers_process ()
                         #endif
 
                         if (triviality == trivial_case_e::non_trivial)
+                        // the overlap is not trivially computed
                         {
-                            // the overlap is not trivially computed
-                            #ifndef WORKERS_MAKE_BATCHES
-                            gpu_queue_item_ptr->add(idx, cub, R, weight);
-                            #else // WORKERS_MAKE_BATCHES
-                            add_to_gpu_batch_queue_if_full(gpu_batch_queue_item_ptr);
-                            gpu_batch_queue_item_ptr->add(idx, cub, R, weight);
-                            #endif // WORKERS_MAKE_BATCHES
+                            if (R < globals.gpu.Rmin || R > globals.gpu.Rmax)
+                            // the radius falls outside the interpolated regime,
+                            // we need to do the full analytical calculation
+                            {
+                                overlap = exact_overlap(cub, R);
+
+                                #ifdef COUNT
+                                ++exact_calculations;
+                                #endif // COUNT
+                            }
+                            else
+                            // the radius is in the interpolated regime,
+                            // we can use the interpolating network
+                            {
+                                #ifndef WORKERS_MAKE_BATCHES
+                                gpu_queue_item_ptr->add(idx, cub, R, weight);
+                                #else // WORKERS_MAKE_BATCHES
+                                add_to_gpu_batch_queue_if_full(gpu_batch_queue_item_ptr);
+                                gpu_batch_queue_item_ptr->add(idx, cub, R, weight);
+                                #endif // WORKERS_MAKE_BATCHES
+
+                                #ifdef COUNT
+                                ++interpolations;
+                                #endif // COUNT
+
+                                continue;
+                            }
                         }
+                        #ifdef COUNT
                         else
-                            // overlap has been trivially computed, needs only to be added
-                            cpu_queue_item_ptr->add(idx, weight, overlap);
+                            ++trivial_calculations;
+                        #endif // COUNT
+
+                        // overlap has been trivially or analytically computed,
+                        // needs only to be added
+                        cpu_queue_item_ptr->add(idx, weight, overlap);
                     }// for zz
                 }// for yy
             }// for xx
@@ -192,7 +246,14 @@ workers_process ()
     globals.workers_finished = true;
 
     #ifdef COUNT
-    std::fprintf(stderr, "Workers processed %lu numbers.\n", processed_numbers);
+    std::fprintf(stderr, "Workers processed %lu numbers, of which were\n"
+                         "\t%.3e exact calculations,\n"
+                         "\t%.3e trivial calculations,\n"
+                         "\t%.3e interpolations.\n\n",
+                         processed_numbers,
+                         (double)exact_calculations,
+                         (double)trivial_calculations,
+                         (double)interpolations);
     #endif // NDEBUG
 
     #ifndef NDEBUG
