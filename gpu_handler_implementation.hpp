@@ -3,6 +3,7 @@
 
 #include "defines.hpp"
 
+#include <cstdio>
 #include <memory>
 #include <algorithm>
 #include <limits>
@@ -106,6 +107,8 @@ gpu_handler::get_resource (size_t nbytes,
     #ifdef MULTI_ROOT
     #   pragma omp critical (Get_Resource_Critical)
     {
+    // TODO
+    std::fprintf(stderr, "Thread %d entered critical region.\n", omp_get_thread_num());
     #endif // MULTI_ROOT
 
         #ifdef CHECK_FOR_MEM
@@ -210,6 +213,8 @@ gpu_handler::get_resource (size_t nbytes,
         #endif // CHECK_FOR_MEM
 
     #ifdef MULTI_ROOT
+    // TODO
+    std::fprintf(stderr, "Thread %d exited critical region.\n", omp_get_thread_num());
     } // Get_Resource_Critical
     #endif // MULTI_ROOT
 
