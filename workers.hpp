@@ -185,6 +185,7 @@ workers_process ()
                         std::array<float,3> cub { (float)(xx), (float)(yy), (float)(zz) };
 
                         mod_translations(cub, part_centre);
+                        mod_reflections(cub);
 
                         float overlap = 0.0F;
 

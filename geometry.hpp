@@ -37,7 +37,11 @@ hypotsq (float x, float y, float z)
     return x*x + y*y + z*z;
 }// }}}
 
-// Simple functions to mod-out symmetries
+// Simple functions to mod-out symmetries, 
+// need to be called in the order
+//    1) translations
+//    2) reflections
+//    3) rotations
 // {{{
 static inline void
 mod_translations (std::array<float,3> &cub,
@@ -47,6 +51,7 @@ mod_translations (std::array<float,3> &cub,
         cub[ii] -= sphere_centre[ii];
 }
 
+// assumes that translations have already been modded out
 static inline void
 mod_reflections (std::array<float,3> &cub)
 {
@@ -55,6 +60,7 @@ mod_reflections (std::array<float,3> &cub)
             x = - (x + 1.0F);
 }
 
+// assumes that translations & reflections have already been modded out
 static inline void
 mod_rotations (std::array<float,3> &cub)
 {
