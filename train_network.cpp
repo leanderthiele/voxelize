@@ -14,7 +14,7 @@ bool gpu_avail;
 std::shared_ptr<c10::Device> device_ptr;
 
 static constexpr size_t batchsize = 4096;
-static constexpr size_t Nepoch = 100;
+static constexpr size_t Nepoch = 500;
 static constexpr size_t Nbatches_epoch = 100;
 
 static constexpr double learning_rate = 1e-3;
@@ -90,15 +90,24 @@ int main ()
         std::fprintf(stderr, "epoch %lu / %lu\n", epoch_idx+1, Nepoch);
     }
 
+    // save network
+    torch::save(net, get_fname("network", Rmin, Rmax, ".pt"));
+
+    // save validation loss
+    save_vec(validation_loss, get_fname("validation_loss", Rmin, Rmax, ".bin"));
+
     // test the network
     net->eval();
     auto test_batch = draw_batch();
+    auto in_tens = test_batch.first.to(torch::kCPU);
+    auto targ_tens = test_batch.second.to(torch::kCPU);
+    auto in_acc = in_tens.accessor<float,2>();
+    auto targ_acc = targ_tens.accessor<float,2>();
     auto test_pred = net->forward(test_batch.first);
+    test_pred = test_pred.to(torch::kCPU);
     std::vector<float> R;
     std::vector<float> targ;
     std::vector<float> pred;
-    auto in_acc = test_batch.first.accessor<float,2>();
-    auto targ_acc = test_batch.second.accessor<float,2>();
     auto pred_acc = test_pred.accessor<float,2>();
     for (size_t ii=0; ii != batchsize; ++ii)
     {
@@ -109,12 +118,6 @@ int main ()
     save_vec(R, "test_R.bin");
     save_vec(targ, "test_targ.bin");
     save_vec(pred, "test_pred.bin");
-
-    // save network
-    torch::save(net, get_fname("network", Rmin, Rmax, ".pt"));
-
-    // save validation loss
-    save_vec(validation_loss, get_fname("validation_loss", Rmin, Rmax, ".bin"));
 }// }}}
 
 void set_device ()

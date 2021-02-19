@@ -11,7 +11,7 @@
 #include "overlap_lft_double.hpp"
 
 static constexpr size_t Nsamples = 1 << 26;
-static constexpr float  Rmin     = 0.1;
+static constexpr float  Rmin     = 0.01;
 static constexpr float  Rmax     = 10.0;
 
 std::vector<float> inputs;
@@ -67,14 +67,12 @@ std::pair<std::array<float,3>,float> generate_input ()
     static std::uniform_real_distribution<float> logRdist (std::log(Rmin), std::log(Rmax));
     static std::uniform_real_distribution<float> unitdist (-1.0, 1.0);
 
-    std::array<float,3> cub;
-    float R;
-    float discard;
+    float R = std::exp(logRdist(rng));
 
+    std::array<float,3> cub;
+    float discard;
     do
     {
-        R = std::exp(logRdist(rng));
-
         for (size_t ii=0; ii != 3; ++ii)
             cub[ii] = (R+1.0F) * unitdist(rng);
 
