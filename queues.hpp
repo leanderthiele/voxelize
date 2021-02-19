@@ -74,9 +74,14 @@ struct gpu_queue_item
 //        discarded afterwards
 struct gpu_batch_queue_item
 {// {{{
-    static constexpr size_t batch_size = 4*32768;
+    #ifndef BATCH_SIZE
+    static constexpr size_t batch_size = 1 << 17;
+    #else // BATCH_SIZE
+    static constexpr size_t batch_size = BATCH_SIZE;
+    #endif // BATCH_SIZE
 
     size_t current_idx;
+
     #ifndef WORKERS_MAKE_BATCHES
     std::vector<std::shared_ptr<gpu_queue_item>> gpu_inputs;
     #else // WORKERS_MAKE_BATCHES

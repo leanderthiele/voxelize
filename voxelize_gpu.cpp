@@ -45,6 +45,8 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
                       radii, field, box, network_file);
 
+    auto t1 = std::chrono::steady_clock::now();
+
     #ifndef NDEBUG
     cudaProfilerStart();
     #endif // NDEBUG
@@ -76,6 +78,10 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     #ifndef NDEBUG
     cudaProfilerStop();
     #endif // NDEBUG
+
+    auto t2 = std::chrono::steady_clock::now();
+    std::chrono::duration<double> diff = t2 - t1;
+    std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
 
     #ifdef COUNT
     size_t gpu_process_items = 0;
@@ -112,8 +118,6 @@ main ()
     for (size_t ii=0; ii != (size_t)(box_N * box_N * box_N); ++ii)
         box[ii] = 0.0F;
 
-    auto t1 = std::chrono::steady_clock::now();
-
     for (size_t ii=0; ii != Nparticles; ++ii)
     {
         assert(density[ii] >= 0.0F);
@@ -124,10 +128,6 @@ main ()
 
     voxelize_gpu(Nparticles, box_N, 1, box_L,
                  coordinates, radii, density, box, net_fname.c_str());
-
-    auto t2 = std::chrono::steady_clock::now();
-    std::chrono::duration<double> diff = t2 - t1;
-    std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
 
     std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
 

@@ -66,7 +66,7 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
     Nthreads_tot { omp_get_max_threads() },
 
     #ifdef MULTI_ROOT
-    Nthreads_root_gpu { 2 * (int)torch::cuda::device_count() },
+    Nthreads_root_gpu { Nthreads_tot / MULTI_ROOT },
     #else // MULTI_ROOT
     Nthreads_root_gpu { 1 },
     #endif // MULTI_ROOT
