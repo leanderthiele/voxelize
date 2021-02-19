@@ -106,12 +106,17 @@ workers_process ()
     uint64_t processed_numbers = 0UL,
              trivial_calculations = 0UL,
              interpolations = 0UL,
-             exact_calculations = 0UL;
+             exact_calculations_lo = 0UL,
+             exact_calculations_hi = 0UL;
     #endif // COUNT
 
     #ifdef MULTI_WORKERS
     #   ifdef COUNT
-    #       pragma omp parallel reduction(+:processed_numbers,trivial_calculations,interpolations,exact_calculations)
+    #       pragma omp parallel reduction(+:processed_numbers,\
+                                            trivial_calculations,\
+                                            interpolations,\
+                                            exact_calculations_lo,\
+                                            exact_calculations_hi)
     #   else // COUNT
     #       pragma omp parallel
     #   endif // COUNT
@@ -195,7 +200,10 @@ workers_process ()
                                 overlap = exact_overlap(cub, R);
 
                                 #ifdef COUNT
-                                ++exact_calculations;
+                                if (R < globals.gpu.Rmin)
+                                    ++exact_calculations_lo;
+                                else
+                                    ++exact_calculations_hi;
                                 #endif // COUNT
                             }
                             else
@@ -244,11 +252,13 @@ workers_process ()
 
     #ifdef COUNT
     std::fprintf(stderr, "Workers processed %lu numbers, of which were\n"
-                         "\t%.3e exact calculations,\n"
+                         "\t%.3e exact calculations (R<Rmin),\n"
+                         "\t%.3e exact calculations (R>Rmax),\n"
                          "\t%.3e trivial calculations,\n"
                          "\t%.3e interpolations.\n\n",
                          processed_numbers,
-                         (double)exact_calculations,
+                         (double)exact_calculations_lo,
+                         (double)exact_calculations_hi,
                          (double)trivial_calculations,
                          (double)interpolations);
     #endif // NDEBUG
