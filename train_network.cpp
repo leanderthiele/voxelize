@@ -14,10 +14,16 @@ bool gpu_avail;
 std::shared_ptr<c10::Device> device_ptr;
 
 static constexpr size_t batchsize = 4096;
-static constexpr size_t Nepoch = 500;
+static constexpr size_t Nepoch = 1000;
 static constexpr size_t Nbatches_epoch = 100;
-
+ 
+// initial learning rate
 static constexpr double learning_rate = 1e-3;
+// how many epochs elapse before the learning rate is reduced
+static constexpr size_t lr_sched_rate = 200;
+// by how much to reduce the learning rate
+static constexpr double lr_sched_fact = 0.2;
+
 
 // only for file naming purposes
 static float Rmin = -1.0F;
@@ -86,6 +92,15 @@ int main ()
         auto val_pred = net->forward(val_batch.first);
         auto loss = loss_fct(val_batch.second, val_pred);
         validation_loss.push_back(loss.item<float>());
+
+        // adjust learning rate if necessary
+        if (!( (epoch_idx+1UL) % lr_sched_rate ))
+            for (auto &group : optimizer.param_groups())
+                if (group.has_options())
+                {
+                    auto &options = static_cast<torch::optim::AdamOptions &>(group.options());
+                    options.lr(options.lr() * lr_sched_fact);
+                }
 
         std::fprintf(stderr, "epoch %lu / %lu\n", epoch_idx+1, Nepoch);
     }
