@@ -16,10 +16,14 @@
 #include "queues.hpp"
 #include "queues_implementation.hpp"
 #include "globals.hpp"
-#include "network.hpp"
-#include "gpu_handler.hpp"
-#include "gpu_handler_implementation.hpp"
 
+#ifndef CPU_ONLY
+#   include "network.hpp"
+#   include "gpu_handler.hpp"
+#   include "gpu_handler_implementation.hpp"
+#endif // CPU_ONLY
+
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 static inline void
 check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr,
@@ -60,7 +64,9 @@ check_gpu_queue (std::shared_ptr<gpu_batch_queue_item> &gpu_batch_queue_item_ptr
     }
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 static inline void
 #ifdef COUNT
 check_gpu_batch_queue (uint64_t &processed_batches)
@@ -122,7 +128,9 @@ check_gpu_batch_queue ()
                                                network_ptr));
     }
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 static inline void
 check_gpu_process_list ()
 {// {{{
@@ -156,6 +164,7 @@ check_gpu_process_list ()
         globals.cpu_queue.push(cpu_queue_item_ptr);
     }
 }// }}}
+#endif // CPU_ONLY
 
 static inline void
 #ifdef COUNT
@@ -189,13 +198,16 @@ check_finish ()
     if (!globals.workers_finished)
         return false;
 
+    bool cpu_queue_empty;
+    #ifndef CPU_ONLY     
     bool gpu_batch_queue_empty,
          #ifndef WORKERS_MAKE_BATCHES
          gpu_queue_empty,
          #endif // WORKERS_MAKE_BATCHES
-         gpu_process_list_empty,
-         cpu_queue_empty;
+         gpu_process_list_empty;
+    #endif // CPU_ONLY
     
+    #ifndef CPU_ONLY
     #ifndef WORKERS_MAKE_BATCHES
     #pragma omp critical (GPU_Queue_Critical)
     gpu_queue_empty = globals.gpu_queue.empty();
@@ -203,7 +215,9 @@ check_finish ()
     if (!gpu_queue_empty)
         return false;
     #endif // WORKERS_MAKE_BATCHES
+    #endif // CPU_ONLY
 
+    #ifndef CPU_ONLY
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Batch_Queue_Critical)
     #endif // MULTI_ROOT, EXTRA_ROOT_ADD
@@ -211,7 +225,9 @@ check_finish ()
 
     if (!gpu_batch_queue_empty)
         return false;
+    #endif // CPU_ONLY
 
+    #ifndef CPU_ONLY
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Process_List_Critical)
     #endif // MULTI_ROOT
@@ -219,6 +235,7 @@ check_finish ()
 
     if (!gpu_process_list_empty)
         return false;
+    #endif // CPU_ONLY
     
     #pragma omp critical (CPU_Queue_Critical)
     cpu_queue_empty = globals.cpu_queue.empty();
@@ -229,6 +246,7 @@ check_finish ()
     return true;
 }// }}}
 
+#ifndef CPU_ONLY
 static void
 root_gpu_process ()
 {// {{{
@@ -339,6 +357,7 @@ root_gpu_process ()
     globals.root_gpu_finished = true;
     #endif // EXTRA_ROOT_ADD
 }// }}}
+#endif // CPU_ONLY
 
 #ifdef EXTRA_ROOT_ADD
 static void
@@ -363,10 +382,14 @@ root_add_process ()
         check_cpu_queue();
         #endif // COUNT
 
-        #pragma omp critical(CPU_Queue_Critical)
+        #pragma omp critical (CPU_Queue_Critical)
         cpu_queue_empty = globals.cpu_queue.empty();
 
+        #ifndef CPU_ONLY
         if (cpu_queue_empty && globals.root_gpu_finished)
+        #else // CPU_ONLY
+        if (cpu_queue_empty)
+        #endif // CPU_ONLY
             break;
     }
 

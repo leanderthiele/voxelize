@@ -1,3 +1,5 @@
+#include "defines.hpp"
+
 #include <cassert>
 #include <cstdio>
 #include <iostream>
@@ -5,9 +7,11 @@
 #include <string>
 #include <omp.h>
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
-#include "cuda_profiler_api.h"
+#ifndef CPU_ONLY
+#   include "cuda.h"
+#   include "cuda_runtime_api.h"
+#   include "cuda_profiler_api.h"
+#endif // CPU_ONLY
 
 #include "geometry.hpp"
 #include "globals.hpp"
@@ -49,22 +53,26 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
              float *coords, float *radii, float *field, float *box,
              const char *network_file)
 {
+    #ifdef CPU_ONLY
+    assert(!network_file);
+    #endif // CPU_ONLY
+
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
                       radii, field, box, network_file);
 
     auto t1 = std::chrono::steady_clock::now();
 
-    #ifndef NDEBUG
+    #if !defined(NDEBUG) && !defined(CPU_ONLY)
     cudaProfilerStart();
-    #endif // NDEBUG
+    #endif // NDEBUG, CPU_ONLY
 
     // split into two threads: root and workers
-    #ifdef EXTRA_ROOT_ADD
+    #if defined(EXTRA_ROOT_ADD) && !defined(CPU_ONLY)
     omp_set_num_threads(3);
-    #else // EXTRA_ROOT_ADD
+    #else // EXTRA_ROOT_ADD, CPU_ONLY
     omp_set_num_threads(2);
-    #endif // EXTRA_ROOT_ADD
+    #endif // EXTRA_ROOT_ADD, CPU_ONLY
 
     // allow nesting
     omp_set_nested(true);
@@ -74,24 +82,27 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
         #pragma omp section
         root_gpu_process();
 
-        #ifdef EXTRA_ROOT_ADD
+        #if defined(EXTRA_ROOT_ADD) || defined(CPU_ONLY)
         #pragma omp section
         root_add_process();
-        #endif // EXTRA_ROOT_ADD
+        #endif // EXTRA_ROOT_ADD, CPU_ONLY
 
+        #ifndef CPU_ONLY
         #pragma omp section
         workers_process();
+        #endif // CPU_ONLY
     }
 
-    #ifndef NDEBUG
+    #if !defined(NDEBUG) && !defined(CPU_ONLY)
     cudaProfilerStop();
-    #endif // NDEBUG
+    #endif // NDEBUG, CPU_ONLY
 
     auto t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = t2 - t1;
     std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
 
     #ifdef COUNT
+    #ifndef CPU_ONLY
     size_t gpu_process_items = 0;
     for (auto x : globals.gpu_process_list)
         ++gpu_process_items;
@@ -99,6 +110,10 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
                          globals.gpu_batch_queue.size(),
                          gpu_process_items,
                          globals.cpu_queue.size());
+    #else // CPU_ONLY
+    std::fprintf(stderr, "In the end, %lu in cpu_queue\n",
+                         globals.cpu_queue.size());
+    #endif // CPU_ONLY
     #endif // COUNT
 }
 

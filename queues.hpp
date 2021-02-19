@@ -1,6 +1,8 @@
 #ifndef QUEUES_HPP
 #define QUEUES_HPP
 
+#include "defines.hpp"
+
 #include <cassert>
 #include <array>
 #include <vector>
@@ -10,26 +12,34 @@
 #include <cmath>
 #include <algorithm>
 
-#include <torch/torch.h>
-#include <c10/cuda/CUDAStream.h>
-#include <c10/cuda/CUDAGuard.h>
-#include <ATen/cuda/CUDAEvent.h>
+#ifndef CPU_ONLY
+#   include <torch/torch.h>
+#   include <c10/cuda/CUDAStream.h>
+#   include <c10/cuda/CUDAGuard.h>
+#   include <ATen/cuda/CUDAEvent.h>
+#endif // CPU_ONLY
 
-#include "defines.hpp"
 #include "geometry.hpp"
-#include "network.hpp"
-#include "gpu_handler.hpp"
+
+#ifndef CPU_ONLY
+#   include "network.hpp"
+#   include "gpu_handler.hpp"
+#endif // CPU_ONLY
 
 // The different queues (items forward declared, implementation later in this file)
 struct cpu_queue_item;
+
+#ifndef CPU_ONLY
 struct gpu_queue_item;
 struct gpu_batch_queue_item;
 struct gpu_process_item;
+#endif // CPU_ONLY
 
 // lives on shared memory, all workers and root insert
 // Working along the queue means adding items to the output box.
 typedef std::queue<std::shared_ptr<cpu_queue_item>>          cpu_queue_t;
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 // lives on shared memory, all workers insert
 // Working along the queue means assembling gpu_batch_queue_items
@@ -43,7 +53,9 @@ typedef std::queue<std::shared_ptr<gpu_batch_queue_item>>    gpu_batch_queue_t;
 // lives on root memory, root inserts
 // Working along the list means constructing cpu_queue_items
 typedef std::list<std::shared_ptr<gpu_process_item>>         gpu_process_list_t;
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 struct gpu_queue_item
 {// {{{
@@ -68,7 +80,9 @@ struct gpu_queue_item
     bool is_full ();
 };// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 // Note : this struct is a one-use object, after calling compute the results
 //        can be retrieved but in the current implementation it has to be
 //        discarded afterwards
@@ -107,6 +121,7 @@ struct gpu_batch_queue_item
     void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
     #endif // WORKERS_MAKE_BATCHES
 };// }}}
+#endif // CPU_ONLY
 
 struct cpu_queue_item
 {// {{{
@@ -121,8 +136,10 @@ struct cpu_queue_item
     // default constructor (called on worker threads)
     cpu_queue_item ();
 
+    #ifndef CPU_ONLY
     // specialized constructor (called on root thread with network result)
     cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result);
+    #endif // CPU_ONLY
 
     void add (int64_t box_index, const float *weight, float overlap);
 
@@ -132,6 +149,7 @@ struct cpu_queue_item
     void add_to_box ();
 };// }}}
 
+#ifndef CPU_ONLY
 struct gpu_process_item
 {// {{{
     std::shared_ptr<gpu_batch_queue_item> batch;
@@ -154,6 +172,7 @@ private :
 
     at::cuda::CUDAEvent finished_event;
 };// }}}
+#endif // CPU_ONLY
 
 
 #endif // QUEUES_HPP

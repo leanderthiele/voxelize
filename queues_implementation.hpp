@@ -7,17 +7,23 @@
 #   include <cstdio>
 #endif
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+#ifndef CPU_ONLY
+#   include "cuda.h"
+#   include "cuda_runtime_api.h"
+#endif // CPU_ONLY
 
 #include "geometry.hpp"
-#include "network.hpp"
 #include "queues.hpp"
-#include "globals.hpp"
-#include "gpu_handler.hpp"
+
+#ifndef CPU_ONLY
+#   include "globals.hpp"
+#   include "network.hpp"
+#   include "gpu_handler.hpp"
+#endif // CPU_ONLY
 
 // --- Implementation ---
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 gpu_queue_item::gpu_queue_item ()
 {// {{{
@@ -25,7 +31,11 @@ gpu_queue_item::gpu_queue_item ()
     weights.reserve(reserv_size * globals.dim);
     network_inputs.reserve(reserv_size * Net::netw_item_size);
 }// }}}
+#endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
+#ifndef WORKERS_MAKE_BATCHES
 inline void
 gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
 {// {{{
@@ -39,13 +49,18 @@ gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const
     // append the network inputs
     Net::input_normalization(cub, R, network_inputs);
 }// }}}
+#endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
+#ifndef WORKERS_MAKE_BATCHES
 inline bool
 gpu_queue_item::is_full ()
 {// {{{
     return box_indices.size() >= approx_size;
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
 cpu_queue_item::cpu_queue_item ()
 {// {{{
@@ -54,6 +69,7 @@ cpu_queue_item::cpu_queue_item ()
     overlaps.reserve(reserv_size);
 }// }}}
 
+#ifndef CPU_ONLY
 cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result)
 #ifdef WORKERS_MAKE_BATCHES
     : box_indices { gpu_result->box_indices },
@@ -115,6 +131,7 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
         overlaps.push_back(gpu_result->gpu_tensor_accessor[ii][0]);
     }
 }// }}}
+#endif // CPU_ONLY
 
 inline void
 cpu_queue_item::add (int64_t box_index, const float *weight, float overlap)
@@ -155,6 +172,7 @@ cpu_queue_item::add_to_box ()
         }
 }// }}}
 
+#ifndef CPU_ONLY
 gpu_batch_queue_item::gpu_batch_queue_item () :
     current_idx { 0 },
     gpu_tensor { torch::empty( {batch_size, Net::netw_item_size},
@@ -169,7 +187,9 @@ gpu_batch_queue_item::gpu_batch_queue_item () :
     weights.reserve(globals.dim * batch_size);
     #endif // WORKERS_MAKE_BATCHES
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 inline bool
 gpu_batch_queue_item::is_full (size_t to_add)
@@ -183,7 +203,9 @@ gpu_batch_queue_item::is_full ()
     return box_indices.size() == batch_size;
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 inline void
 gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
@@ -215,7 +237,9 @@ gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R,
     ++current_idx;
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch_,
                                     std::shared_ptr<c10::Device> device_,
                                     std::shared_ptr<StreamWState> stream_,
@@ -229,7 +253,9 @@ gpu_process_item::gpu_process_item (std::shared_ptr<gpu_batch_queue_item>  batch
     // perform the computation (asynchronously)
     compute();
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 inline void
 gpu_process_item::release_resources () const
 {// {{{
@@ -238,14 +264,18 @@ gpu_process_item::release_resources () const
     stream->set_busy(false);
     #endif // RANDOM_STREAM
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 inline bool
 gpu_process_item::is_done () const
 {// {{{
     // TODO not sure about this!
     return finished_event.isCreated() && finished_event.query();
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 inline void
 gpu_process_item::compute ()
 {// {{{
@@ -268,6 +298,7 @@ gpu_process_item::compute ()
         finished_event.record();
     }
 }// }}}
+#endif // CPU_ONLY
 
 
 #endif // QUEUES_IMPLEMENTATION_HPP

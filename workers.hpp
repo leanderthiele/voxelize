@@ -34,6 +34,7 @@ add_to_cpu_queue_if_full (std::shared_ptr<cpu_queue_item> &cpu_queue_item_ptr,
     }
 }// }}}
 
+#ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 static inline void
 add_to_gpu_queue_if_full (std::shared_ptr<gpu_queue_item> &gpu_queue_item_ptr,
@@ -63,6 +64,7 @@ add_to_gpu_batch_queue_if_full (std::shared_ptr<gpu_batch_queue_item> &gpu_batch
     }
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
 static inline float
 exact_overlap (const std::array<float,3> &cub, float R)
@@ -124,11 +126,13 @@ workers_process ()
     {// parallel
         std::shared_ptr<cpu_queue_item> cpu_queue_item_ptr { new cpu_queue_item };
 
+        #ifndef CPU_ONLY
         #ifndef WORKERS_MAKE_BATCHES
         std::shared_ptr<gpu_queue_item> gpu_queue_item_ptr { new gpu_queue_item };
         #else // WORKERS_MAKE_BATCHES
         std::shared_ptr<gpu_batch_queue_item> gpu_batch_queue_item_ptr { new gpu_batch_queue_item };
         #endif // WORKERS_MAKE_BATCHES
+        #endif // CPU_ONLY
 
         // normalize the coordinates
         #ifdef MULTI_WORKERS
@@ -152,9 +156,12 @@ workers_process ()
             float *weight = globals.field + globals.dim*pp;
 
             add_to_cpu_queue_if_full(cpu_queue_item_ptr);
+
+            #ifndef CPU_ONLY
             #ifndef WORKERS_MAKE_BATCHES
             add_to_gpu_queue_if_full(gpu_queue_item_ptr);
             #endif // WORKERS_MAKE_BATCHES
+            #endif // CPU_ONLY
 
             for (int64_t xx  = (int64_t)(part_centre[0]-R) - 1L;
                          xx <= (int64_t)(part_centre[0]+R);
@@ -193,10 +200,12 @@ workers_process ()
                         if (triviality == trivial_case_e::non_trivial)
                         // the overlap is not trivially computed
                         {
+                            #ifndef CPU_ONLY
                             if (R < globals.gpu.Rmin || R > globals.gpu.Rmax)
                             // the radius falls outside the interpolated regime,
                             // we need to do the full analytical calculation
                             {
+                            #endif // CPU_ONLY
                                 overlap = exact_overlap(cub, R);
 
                                 #ifdef COUNT
@@ -205,6 +214,7 @@ workers_process ()
                                 else
                                     ++exact_calculations_hi;
                                 #endif // COUNT
+                            #ifndef CPU_ONLY
                             }
                             else
                             // the radius is in the interpolated regime,
@@ -223,6 +233,7 @@ workers_process ()
 
                                 continue;
                             }
+                            #endif // CPU_ONLY
                         }
                         #ifdef COUNT
                         else
@@ -239,11 +250,14 @@ workers_process ()
 
         // clean up if we have any unfinished data in our local buffers
         add_to_cpu_queue_if_full(cpu_queue_item_ptr, true);
+
+        #ifndef CPU_ONLY
         #ifndef WORKERS_MAKE_BATCHES
         add_to_gpu_queue_if_full(gpu_queue_item_ptr, true);
         #else // WORKERS_MAKE_BATCHES
         add_to_gpu_batch_queue_if_full(gpu_batch_queue_item_ptr, true);
         #endif // WORKERS_MAKE_BATCHES
+        #endif // CPU_ONLY
 
     }// parallel
 
