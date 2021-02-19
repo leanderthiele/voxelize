@@ -164,9 +164,9 @@ cpu_queue_item::add_to_box ()
         {
             assert(overlaps[ii] >= 0.0F);
 
-            #if defined(MULTI_ROOT) && !defined(EXTRA_ROOT_ADD)
+            #if defined(MULTI_ROOT) && !defined(EXTRA_ROOT_ADD) && !defined(CPU_ONLY)
             #   pragma omp atomic
-            #endif // MULTI_ROOT, EXTRA_ROOT_ADD
+            #endif // MULTI_ROOT, EXTRA_ROOT_ADD, CPU_ONLY
             globals.box[globals.dim*box_indices[ii]+dd]
                 += weights[ii*globals.dim+dd] * overlaps[ii];
         }

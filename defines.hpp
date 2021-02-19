@@ -11,7 +11,7 @@
 // do not use the interpolating neural network, the code will be run
 // completely on CPUs.
 // No dependence on PyTorch now.
-#define CPU_ONLY
+// #define CPU_ONLY
 
 
 // -------------------------------------------

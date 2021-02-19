@@ -39,12 +39,13 @@ struct Net : public torch::nn::Cloneable<Net>
     template<typename T>
     static void
     // assumes data in the form { R, cub }
-    input_normalization (const float *data, T out);
+    input_normalization (const float *data, T out, bool do_rotations=true);
 
     static void
     input_normalization (std::array<float,3> &cub, float R, std::vector<float> &out, bool do_rotations=true);
 
 private :
+    // T must be such that cub.operator[] is reasonably defined
     template<typename T>
     static float
     input_normalization_val (const T &cub, float R, size_t idx);
@@ -111,12 +112,13 @@ Net::input_normalization (std::array<float,3> &cub, float R, T out, bool do_rota
 
 template<typename T>
 inline void
-Net::input_normalization (const float *data, T out)
+Net::input_normalization (const float *data, T out, bool do_rotations)
 {// {{{
     float R = data[0];
-    const float *cub = data+1;
-    for (size_t ii=0; ii != netw_item_size; ++ii)
-        out[ii] = input_normalization_val(cub, R, ii);
+    std::array<float,3> cub;
+    for (size_t ii=0; ii != 3; ++ii)
+        cub[ii] = data[ii+1];
+    input_normalization(cub, R, out, do_rotations);
 }// }}}
 
 inline void
