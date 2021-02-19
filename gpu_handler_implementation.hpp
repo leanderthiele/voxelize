@@ -44,6 +44,10 @@ gpu_handler::gpu_handler (const std::string &network_file)
     // get the interval in which the network is trustworthy from the filename
     assert(read_fname(network_file, Rmin, Rmax));
 
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
+    #endif
+
     // load the network onto the CPU
     auto tmp_net = std::make_shared<Net>();
     if (network_file != "NO_FILE")
