@@ -194,22 +194,20 @@ check_cpu_queue ()
     }
 }// }}}
 
+#ifndef CPU_ONLY
 static inline bool
 check_finish ()
 {// {{{
     if (!globals.workers_finished)
         return false;
 
-    bool cpu_queue_empty;
-    #ifndef CPU_ONLY     
-    bool gpu_batch_queue_empty,
+    bool cpu_queue_empty,
+         gpu_batch_queue_empty,
          #ifndef WORKERS_MAKE_BATCHES
          gpu_queue_empty,
          #endif // WORKERS_MAKE_BATCHES
          gpu_process_list_empty;
-    #endif // CPU_ONLY
     
-    #ifndef CPU_ONLY
     #ifndef WORKERS_MAKE_BATCHES
     #pragma omp critical (GPU_Queue_Critical)
     gpu_queue_empty = globals.gpu_queue.empty();
@@ -217,9 +215,7 @@ check_finish ()
     if (!gpu_queue_empty)
         return false;
     #endif // WORKERS_MAKE_BATCHES
-    #endif // CPU_ONLY
 
-    #ifndef CPU_ONLY
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Batch_Queue_Critical)
     #endif // MULTI_ROOT, EXTRA_ROOT_ADD
@@ -227,9 +223,7 @@ check_finish ()
 
     if (!gpu_batch_queue_empty)
         return false;
-    #endif // CPU_ONLY
 
-    #ifndef CPU_ONLY
     #if defined(MULTI_ROOT) || defined(EXTRA_ROOT_ADD)
     #   pragma omp critical (GPU_Process_List_Critical)
     #endif // MULTI_ROOT
@@ -237,7 +231,6 @@ check_finish ()
 
     if (!gpu_process_list_empty)
         return false;
-    #endif // CPU_ONLY
     
     #pragma omp critical (CPU_Queue_Critical)
     cpu_queue_empty = globals.cpu_queue.empty();
@@ -247,6 +240,7 @@ check_finish ()
 
     return true;
 }// }}}
+#endif // CPU_ONLY
 
 #ifndef CPU_ONLY
 static void
@@ -361,7 +355,7 @@ root_gpu_process ()
 }// }}}
 #endif // CPU_ONLY
 
-#ifdef EXTRA_ROOT_ADD
+#if defined(EXTRA_ROOT_ADD) || defined(CPU_ONLY)
 static void
 root_add_process ()
 {// {{{
@@ -390,7 +384,7 @@ root_add_process ()
         #ifndef CPU_ONLY
         if (cpu_queue_empty && globals.root_gpu_finished)
         #else // CPU_ONLY
-        if (cpu_queue_empty)
+        if (cpu_queue_empty && globals.workers_finished)
         #endif // CPU_ONLY
             break;
     }
@@ -403,6 +397,6 @@ root_add_process ()
     std::fprintf(stderr, "root_add_process : ended.\n");
     #endif // NDEBUG
 }// }}}
-#endif // EXTRA_ROOT_ADD
+#endif // EXTRA_ROOT_ADD, CPU_ONLY
 
 #endif // ROOT_HPP
