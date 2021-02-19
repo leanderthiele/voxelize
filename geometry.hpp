@@ -31,8 +31,11 @@
 #   define M_4PI_3 4.1887902047863909846168578443726705122628925325001410946332594564
 #endif
 
-// hypot function for old compilers
-#define HYPOT(x,y,z) std::hypot(x,y,z)
+static inline float
+hypotsq (float x, float y, float z)
+{// {{{
+    return x*x + y*y + z*z;
+}// }}}
 
 // Simple functions to mod-out symmetries
 // {{{
@@ -78,24 +81,26 @@ is_cube_in_sphere (const std::array<float,3> &cub, float R)
 {
     // NOTE : we may be able to optimize this quite a bit by using
     //        quick, exclusive checks first and then only evaluating
-    //        some of the HYPOT depending on signs.
+    //        some of the hypotsq depending on signs.
+    float Rsq = R * R;
+
     return R >= M_SQRT1_2f32
-           && HYPOT(cub[0], cub[1], cub[2]) < R
-           && HYPOT(cub[0]+1.0F, cub[1], cub[2]) < R
-           && HYPOT(cub[0]+1.0F, cub[1]+1.0F, cub[2]) < R
-           && HYPOT(cub[0]+1.0F, cub[1]+1.0F, cub[2]+1.0F) < R
-           && HYPOT(cub[0], cub[1]+1.0F, cub[2]) < R
-           && HYPOT(cub[0], cub[1]+1.0F, cub[2]+1.0F) < R
-           && HYPOT(cub[0], cub[1], cub[2]+1.0F) < R
-           && HYPOT(cub[0]+1.0F, cub[1], cub[2]+1.0F) < R;
+           && hypotsq(cub[0], cub[1], cub[2]) < Rsq
+           && hypotsq(cub[0]+1.0F, cub[1], cub[2]) < Rsq
+           && hypotsq(cub[0]+1.0F, cub[1]+1.0F, cub[2]) < Rsq
+           && hypotsq(cub[0]+1.0F, cub[1]+1.0F, cub[2]+1.0F) < Rsq
+           && hypotsq(cub[0], cub[1]+1.0F, cub[2]) < Rsq
+           && hypotsq(cub[0], cub[1]+1.0F, cub[2]+1.0F) < Rsq
+           && hypotsq(cub[0], cub[1], cub[2]+1.0F) < Rsq
+           && hypotsq(cub[0]+1.0F, cub[1], cub[2]+1.0F) < Rsq;
 }
 
 static inline bool
 is_no_intersect (const std::array<float,3> &cub, float R)
 {
-    return HYPOT(std::max(0.0F, cub[0]),
-                      std::max(0.0F, cub[1]),
-                      std::max(0.0F, cub[2]) ) > R;
+    return hypotsq(std::max(0.0F, cub[0]),
+                   std::max(0.0F, cub[1]),
+                   std::max(0.0F, cub[2]) ) > R*R;
 }
 // }}}
 
