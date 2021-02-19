@@ -73,7 +73,9 @@ gpu_handler::gpu_handler (const std::string &network_file)
                != *streams[ii][0])
             streams[ii].push_back(std::make_shared<StreamWState>(tmp_stream));
 
+        #ifndef RANDOM_STREAM
         assert(!streams[ii].back()->get_busy());
+        #endif // RANDOM_STREAM
 
         #ifndef NDEBUG
         std::fprintf(stderr, "gpu_handler : Found %lu streams on device #%lu.\n",
