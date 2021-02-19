@@ -234,7 +234,9 @@ inline void
 gpu_process_item::release_resources () const
 {// {{{
     assert(is_done());
+    #ifndef RANDOM_STREAM
     stream->set_busy(false);
+    #endif // RANDOM_STREAM
 }// }}}
 
 inline bool

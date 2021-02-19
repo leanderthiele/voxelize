@@ -25,24 +25,32 @@
 // of whether it is currently busy
 class StreamWState
 {// {{{
+    #ifndef RANDOM_STREAM
     bool is_busy; 
+    #endif // RANDOM_STREAM
 public :
     c10::cuda::CUDAStream cstream;
 
     StreamWState (size_t device_idx, bool high_priority=false) :
+        #ifndef RANDOM_STREAM
         is_busy { false },
+        #endif // RANDOM_STREAM
         cstream { c10::cuda::getStreamFromPool(high_priority, device_idx) }
     { }
+    
     bool operator==(const StreamWState &other) const
     {
         // use the overloaded == operator from the CUDAStream wrapper
         return cstream == other.cstream;
     }
+    
     bool operator!=(const StreamWState &other) const
     {
         // use the overloaded != operator from the CUDAStream wrapper
         return cstream != other.cstream;
     }
+
+    #ifndef RANDOM_STREAM
     void set_busy (bool new_value)
     {
         // FIXME
@@ -56,6 +64,7 @@ public :
     {
         return is_busy;
     }
+    #endif // RANDOM_STREAM
 };// }}}
 
 class gpu_handler

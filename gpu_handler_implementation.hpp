@@ -90,9 +90,14 @@ gpu_handler::get_resource (size_t nbytes,
     static std::default_random_engine rng;
     static std::uniform_int_distribution<size_t> dist(0);
 
+    static constexpr const size_t device_default
+        = std::numeric_limits<size_t>::max();
+    static constexpr const size_t stream_default
+        = std::numeric_limits<size_t>::max();
+
     // use limit values to indicate that no stream was found
-    size_t device_idx = std::numeric_limits<size_t>::max(),
-           stream_idx = std::numeric_limits<size_t>::max();
+    size_t device_idx = device_default,
+           stream_idx = stream_default;
 
     #ifdef MULTI_ROOT
     #   pragma omp critical (Get_Resource_Critical)
@@ -186,9 +191,10 @@ gpu_handler::get_resource (size_t nbytes,
     // block the stream from access -- we do this within a critical region
     // to make sure we don't have any race condition here
     // FIXME assertion in set_busy fails!!
-    if (device_idx != std::numeric_limits<size_t>::max()
-        && stream_idx != std::numeric_limits<size_t>::max())
+    #ifndef RANDOM_STREAM
+    if (device_idx != device_default && stream_idx != stream_default)
         streams[device_idx][stream_idx]->set_busy(true);
+    #endif // RANDOM_STREAM
 
     #ifdef CHECK_FOR_MEM
     } // if (any free GPUs, in terms of memory)
@@ -200,8 +206,7 @@ gpu_handler::get_resource (size_t nbytes,
 
     // check if the critical region has not been able to find a resource for us,
     // indicate by return value
-    if (device_idx == std::numeric_limits<size_t>::max()
-        || stream_idx == std::numeric_limits<size_t>::max())
+    if (device_idx == device_default || stream_idx == stream_default)
         return false;
     
     // fill the return values
