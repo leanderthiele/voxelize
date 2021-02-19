@@ -10,8 +10,10 @@
 #   include <cstdio>
 #endif
 
-#include <torch/torch.h>
-#include <c10/cuda/CUDAStream.h>
+#ifndef CPU_ONLY
+#   include <torch/torch.h>
+#   include <c10/cuda/CUDAStream.h>
+#endif // CPU_ONLY
 
 #include "queues.hpp"
 #include "queues_implementation.hpp"
