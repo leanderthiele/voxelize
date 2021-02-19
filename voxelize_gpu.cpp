@@ -79,18 +79,18 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 
     #pragma omp parallel sections
     {
+        #ifndef CPU_ONLY
         #pragma omp section
         root_gpu_process();
+        #endif // CPU_ONLY
 
         #if defined(EXTRA_ROOT_ADD) || defined(CPU_ONLY)
         #pragma omp section
         root_add_process();
         #endif // EXTRA_ROOT_ADD, CPU_ONLY
 
-        #ifndef CPU_ONLY
         #pragma omp section
         workers_process();
-        #endif // CPU_ONLY
     }
 
     #if !defined(NDEBUG) && !defined(CPU_ONLY)
