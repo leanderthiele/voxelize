@@ -22,7 +22,7 @@
 
 // a wrapper around a CUDA Stream that captures
 // whether the stream can be used for computations
-// of whether it is currently busy
+// or whether it is currently busy
 class StreamWState
 {// {{{
     #ifndef RANDOM_STREAM
@@ -72,8 +72,10 @@ class gpu_handler
     // number of available GPU's
     size_t Ngpu;
 
+    #ifndef RANDOM_STREAM
     // index of the gpu we should use next
     size_t current_gpu;
+    #endif // RANDOM_STREAM
 
     std::vector<std::shared_ptr<c10::Device>> devices;
     std::vector<std::vector<std::shared_ptr<StreamWState>>> streams;

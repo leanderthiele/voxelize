@@ -27,7 +27,9 @@ gpu_handler::gpu_handler (const std::string &network_file)
     std::fprintf(stderr, "Found %lu GPUs.\n", Ngpu);
     #endif // NDEBUG
 
+    #ifndef RANDOM_STREAM
     current_gpu = 0;
+    #endif // RANDOM_STREAM
 
     // fill the devices
     for (size_t ii=0; ii != Ngpu; ++ii)
@@ -104,101 +106,106 @@ gpu_handler::get_resource (size_t nbytes,
     {
     #endif // MULTI_ROOT
 
-    #ifdef CHECK_FOR_MEM
-    // figure out which GPUs have enough memory to hold the tensor we want
-    // to push there
-    std::vector<bool> gpus_free;
-    for (size_t ii=0; ii != Ngpu; ++ii)
-    {
-        cudaSetDevice((int)ii);
-        size_t free_mem, total_mem;
-        if (cudaMemGetInfo(&free_mem, &total_mem) != cudaSuccess)
-        {
-            std::fprintf(stderr, "Unable to read device memory state!\n");
-            break;
-        }
-
-        // in general, we don't want batches that are too large
-        assert(nbytes < 0.3 * total_mem);
-
-        bool enough_mem = nbytes < 0.8*free_mem;
-
-        gpus_free.push_back(enough_mem);
-    }
-    #endif // CHECK_FOR_MEM
-
-    #ifdef CHECK_FOR_MEM
-    // only continue working if we have found at least one GPU that has
-    // free memory
-    if (gpus_free.size() == Ngpu
-        && std::any_of(gpus_free.cbegin(), gpus_free.cend(),
-                       [](bool x){ return x; }))
-    {
-    #endif // CHECK_FOR_MEM
-
-    #ifndef RANDOM_STREAM
-    std::vector<std::pair<size_t,std::vector<size_t>>> idle_stream_indices { Ngpu };
-
-    size_t tmp_current_gpu = current_gpu;
-
-    for (size_t ii=0; ii != Ngpu;
-         ++ii, tmp_current_gpu = (tmp_current_gpu+1) % Ngpu)
-    {
-        // store the GPU index
-        idle_stream_indices[ii].first = tmp_current_gpu;
-
         #ifdef CHECK_FOR_MEM
-        if (!gpus_free[tmp_current_gpu])
-            continue; // simulate that there are no free streams on this device,
-                      // since it is out of memory
+            // figure out which GPUs have enough memory to hold the tensor we want
+            // to push there
+            std::vector<bool> gpus_free;
+            for (size_t ii=0; ii != Ngpu; ++ii)
+            {
+                cudaSetDevice((int)ii);
+                size_t free_mem, total_mem;
+                if (cudaMemGetInfo(&free_mem, &total_mem) != cudaSuccess)
+                {
+                    std::fprintf(stderr, "Unable to read device memory state!\n");
+                    break;
+                }
+
+                // in general, we don't want batches that are too large
+                assert(nbytes < 0.3 * total_mem);
+                bool enough_mem = nbytes < 0.8*free_mem;
+                gpus_free.push_back(enough_mem);
+            }
         #endif // CHECK_FOR_MEM
 
-        // loop over streams on this GPU
-        for (size_t jj=0; jj != streams[tmp_current_gpu].size(); ++jj)
-            // add if idle
-            if (!streams[ii][jj]->get_busy())
-                idle_stream_indices[ii].second.push_back(jj);
-    }
+        #ifdef CHECK_FOR_MEM
+            // only continue working if we have found at least one GPU that has
+            // free memory
+            if (gpus_free.size() == Ngpu
+                && std::any_of(gpus_free.cbegin(), gpus_free.cend(),
+                               [](bool x){ return x; }))
+            {
+        #endif // CHECK_FOR_MEM
 
-    // find the most idle GPU
-    auto most_idle = std::max_element(idle_stream_indices.begin(),
-                                      idle_stream_indices.end(),
-                                      [](const std::pair<size_t,std::vector<size_t>> &a,
-                                         const std::pair<size_t,std::vector<size_t>> &b)
-                                        { return a.second.size() < b.second.size(); }    );
+            #ifndef RANDOM_STREAM
+                std::vector<std::pair<size_t,std::vector<size_t>>> idle_stream_indices { Ngpu };
+                size_t tmp_current_gpu = current_gpu;
 
-    // check if all streams are busy (very unlikely case)
-    if (!most_idle->second.empty())
-    {
-        device_idx = most_idle->first;
-        stream_idx = most_idle->second[dist(rng) % most_idle->second.size()];
-    }
+                for (size_t ii=0; ii != Ngpu;
+                     ++ii, tmp_current_gpu = (tmp_current_gpu+1) % Ngpu)
+                {
+                    // store the GPU index
+                    idle_stream_indices[ii].first = tmp_current_gpu;
 
-    #else // RANDOM_STREAM
+                    #ifdef CHECK_FOR_MEM
+                        if (!gpus_free[tmp_current_gpu])
+                            continue; // simulate that there are no free streams on this device,
+                                      // since it is out of memory
+                    #endif // CHECK_FOR_MEM
 
-    #ifdef CHECK_FOR_MEM
-    do
-    {
-        device_idx = dist(rng) % Ngpu;
-    } while (!gpus_free[device_idx]);
-    #else // CHECK_FOR_MEM
-    device_idx = dist(rng) % Ngpu;
-    #endif // CHECK_FOR_MEM
+                    // loop over streams on this GPU
+                    for (size_t jj=0; jj != streams[tmp_current_gpu].size(); ++jj)
+                        // add if idle
+                        if (!streams[ii][jj]->get_busy())
+                            idle_stream_indices[ii].second.push_back(jj);
+                }
 
-    stream_idx = dist(rng) % streams[device_idx].size();
-    #endif // RANDOM_STREAM
+                // find the most idle GPU
+                auto most_idle = std::max_element(idle_stream_indices.begin(),
+                                                  idle_stream_indices.end(),
+                                                  [](const std::pair<size_t,std::vector<size_t>> &a,
+                                                     const std::pair<size_t,std::vector<size_t>> &b)
+                                                    { return a.second.size() < b.second.size(); }    );
 
-    // block the stream from access -- we do this within a critical region
-    // to make sure we don't have any race condition here
-    // FIXME assertion in set_busy fails!!
-    #ifndef RANDOM_STREAM
-    if (device_idx != device_default && stream_idx != stream_default)
-        streams[device_idx][stream_idx]->set_busy(true);
-    #endif // RANDOM_STREAM
+                // check if all streams are busy (very unlikely case)
+                if (!most_idle->second.empty())
+                {
+                    device_idx = most_idle->first;
+                    stream_idx = most_idle->second[dist(rng) % most_idle->second.size()];
+                }
 
-    #ifdef CHECK_FOR_MEM
-    } // if (any free GPUs, in terms of memory)
-    #endif // CHECK_FOR_MEM
+            #else // RANDOM_STREAM
+
+                #ifdef CHECK_FOR_MEM
+                    // iterate only a finite number of times here to make sure we don't hang
+                    for (size_t ii=0; ii != 100; ++ii)
+                    {
+                        size_t tmp_device_idx = dist(rng) % Ngpu;
+                        if (gpus_free[tmp_device_idx])
+                        {
+                            device_idx = tmp_device_idx;
+                            break;
+                        }
+                    }
+                #else // CHECK_FOR_MEM
+                    device_idx = dist(rng) % Ngpu;
+                #endif // CHECK_FOR_MEM
+
+                if (device_idx != device_default)
+                    stream_idx = dist(rng) % streams[device_idx].size();
+
+            #endif // RANDOM_STREAM
+
+            #ifndef RANDOM_STREAM
+                // block the stream from access -- we do this within a critical region
+                // to make sure we don't have any race condition here
+                // FIXME assertion in set_busy fails!!
+                if (device_idx != device_default && stream_idx != stream_default)
+                    streams[device_idx][stream_idx]->set_busy(true);
+            #endif // RANDOM_STREAM
+
+        #ifdef CHECK_FOR_MEM
+        } // if (any free GPUs, in terms of memory)
+        #endif // CHECK_FOR_MEM
 
     #ifdef MULTI_ROOT
     } // Get_Resource_Critical
@@ -209,14 +216,16 @@ gpu_handler::get_resource (size_t nbytes,
     if (device_idx == device_default || stream_idx == stream_default)
         return false;
     
-    // fill the return values
+    // we have found device and stream --> fill the return values
     network = networks[device_idx];
     device  = devices[device_idx];
     stream  = streams[device_idx][stream_idx];
 
+    #ifndef RANDOM_STREAM
     // advance the internal index, keeping track of which GPU
     // is most likely to be the next best one
     current_gpu = (device_idx+1) % Ngpu;
+    #endif // RANDOM_STREAM
 
     // we have been able to find a resource for the caller
     return true;
