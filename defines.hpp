@@ -37,7 +37,7 @@
 // instead of querying all streams whether they are finished,
 // simply pick a random on
 //  --- currently : not sure! (but may be better)
-#define RANDOM_STREAM
+// #define RANDOM_STREAM
 
 // check whether there's enough free memory before pushing a
 // new batch to the GPU

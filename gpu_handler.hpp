@@ -45,6 +45,10 @@ public :
     }
     void set_busy (bool new_value)
     {
+        // FIXME
+        //
+        // when using multiple GPUs, this assertion fails!!!
+        // (this could also be a CPU race condition since we have more threads now)
         assert(new_value != is_busy);
         is_busy = new_value;
     }

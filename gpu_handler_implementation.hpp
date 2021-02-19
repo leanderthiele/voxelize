@@ -185,7 +185,10 @@ gpu_handler::get_resource (size_t nbytes,
 
     // block the stream from access -- we do this within a critical region
     // to make sure we don't have any race condition here
-    streams[device_idx][stream_idx]->set_busy(true);
+    // FIXME assertion in set_busy fails!!
+    if (device_idx != std::numeric_limits<size_t>::max()
+        && stream_idx != std::numeric_limits<size_t>::max())
+        streams[device_idx][stream_idx]->set_busy(true);
 
     #ifdef CHECK_FOR_MEM
     } // if (any free GPUs, in terms of memory)
