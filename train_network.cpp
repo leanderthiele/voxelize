@@ -14,15 +14,15 @@ bool gpu_avail;
 std::shared_ptr<c10::Device> device_ptr;
 
 static constexpr size_t batchsize = 4096;
-static constexpr size_t Nepoch = 1000;
+static constexpr size_t Nepoch = 2000;
 static constexpr size_t Nbatches_epoch = 100;
  
 // initial learning rate
 static constexpr double learning_rate = 1e-3;
 // how many epochs elapse before the learning rate is reduced
-static constexpr size_t lr_sched_rate = 200;
+static constexpr size_t lr_sched_rate = 300;
 // by how much to reduce the learning rate
-static constexpr double lr_sched_fact = 0.2;
+static constexpr double lr_sched_fact = 0.7;
 
 
 // only for file naming purposes

@@ -106,7 +106,7 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 int
 main ()
 {
-    const std::string net_fname = "network_Rmin0.1000_Rmax10.0000_.pt";
+    const std::string net_fname = "./network_Rmin9.99999978e-03_Rmax1.00000000e+01_.pt";
     const std::string fname = "/projects/QUIJOTE/Leander/SU/hydro_test/seed1/0.00000000p/Arepo/snap_004.hdf5";
     const size_t PartType = 0;
     auto fptr = std::make_shared<H5::H5File>(fname, H5F_ACC_RDONLY);

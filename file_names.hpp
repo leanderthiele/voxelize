@@ -57,7 +57,7 @@ extract_number (const std::string &fname,
 std::string get_fname (const std::string &prefix, float Rmin, float Rmax, const std::string &suffix = "")
 {// {{{
     char buffer[512];
-    std::sprintf(buffer, "%s_Rmin%.8e_Rmax%.8e_%s.pt", prefix.c_str(), Rmin, Rmax, suffix.c_str());
+    std::sprintf(buffer, "%s_Rmin%.8e_Rmax%.8e_%s", prefix.c_str(), Rmin, Rmax, suffix.c_str());
     return std::string(buffer);
 }// }}}
 
