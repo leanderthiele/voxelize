@@ -1,10 +1,9 @@
 #!/bin/sh
 
-export TORCH=${HOME}/pytorch-install
-export CUDNN=/usr/local/cudnn/cuda-11.0/8.0.2
-export CUDA=/usr/local/cuda-11.0
-
 export VOXELIZE=.
+
+source ${VOXELIZE}/paths.sh
+
 export NETWORK_PATH=./data/network.pt
 
 g++ -std=c++17 -O3 -g3 \
