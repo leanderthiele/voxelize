@@ -1,3 +1,5 @@
+// user must define INPUTS_PATH, OUTPUTS_PATH from compiler
+
 #include <cmath>
 #include <cstdio>
 #include <vector>
@@ -15,11 +17,11 @@
 #endif // CPU_ONLY
 
 #ifndef INPUTS_PATH
-#   define INPUTS_PATH "./data/inputs.bin"
+#   error "please define INPUTS_PATH from compiler"
 #endif // INPUTS_PATH
 
 #ifndef OUTPUTS_PATH
-#   define OUTPUTS_PATH "./data/outputs.bin"
+#   error "please define OUTPUTS_PATH from compiler"
 #endif // OUTPUTS_PATH
 
 static constexpr size_t Nsamples = 1 << 26;

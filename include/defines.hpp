@@ -18,9 +18,9 @@
 // #define NDEBUG
 
 // produce code that is needed for testing,
-// e.g. main in voxelize_gpu.cpp
-//  --- currently : has to be on
-#define TESTS
+// currently only for the geometry code
+// (which is confirmed to be correct)
+// #define TESTS
 
 // have an extra root thread that only takes
 // CPU queue items and adds the data to the box.

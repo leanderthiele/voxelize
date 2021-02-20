@@ -1,3 +1,5 @@
+// user must define NETWORK_PATH, INPUTS_PATH, OUTPUTS_PATH from compiler
+
 #include <cstdio>
 #include <cassert>
 #include <vector>
@@ -7,20 +9,22 @@
 #include <fstream>
 #include <filesystem>
 
+#include "defines.hpp"
+
 #ifdef CPU_ONLY
 #   error "train_network.cpp should only be compiled without the CPU_ONLY macro defined."
 #endif // CPU_ONLY
 
 #ifndef NETWORK_PATH
-#   define NETWORK_PATH "./data/network"
+#   error "please define NETWORK_PATH from compiler"
 #endif // NETWORK_PATH
 
 #ifndef INPUTS_PATH
-#   define INPUTS_PATH "./data/inputs.bin"
+#   error "please define INPUTS_PATH from compiler"
 #endif // INPUTS_PATH
 
 #ifndef OUTPUTS_PATH
-#   define OUTPUTS_PATH "./data/outputs.bin"
+#   error "please define OUTPUTS_PATH from compiler"
 #endif // OUTPUTS_PATH
 
 #include <torch/torch.h>

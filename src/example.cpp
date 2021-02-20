@@ -1,3 +1,5 @@
+// if GPU-version desired, user must define NETWORK_PATH from compiler
+
 #include <cmath>
 #include <string>
 
@@ -14,7 +16,7 @@
 
 #ifndef CPU_ONLY
 #ifndef NETWORK_PATH
-#   define NETWORK_PATH "./data/network"
+#   error "please define NETWORK_PATH macro from compiler"
 #endif // NETWORK_PATH
 #endif // CPU_ONLY
 
