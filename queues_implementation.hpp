@@ -23,16 +23,14 @@
 // --- Implementation ---
 
 // simple Macro to choose a templated version of a (void) function (based on globals.dim)
-// Note that the treatment of potentially empty __VA_ARGS__ is a compiler extension,
-// but everyone has gcc right?
 #define CHOOSE_TEMPL(fct, ...)                          \
     do                                                  \
     {                                                   \
         switch (globals.dim)                            \
         {                                               \
-            case (1) : fct<1>(##__VA_ARGS__); break;    \
-            case (2) : fct<2>(##__VA_ARGS__); break;    \
-            case (3) : fct<3>(##__VA_ARGS__); break;    \
+            case (1) : fct<1>(__VA_ARGS__); break;      \
+            case (2) : fct<2>(__VA_ARGS__); break;      \
+            case (3) : fct<3>(__VA_ARGS__); break;      \
             default  : std::fprintf(stderr,             \
                        "Dimension %ld not implemented", \
                        globals.dim); std::terminate();  \
