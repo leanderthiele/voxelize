@@ -86,7 +86,7 @@ gpu_handler::gpu_handler (const std::string &network_file)
         devices.push_back(std::make_shared<c10::Device>(c10::DeviceType::CUDA, ii));
 
     #ifndef NDEBUG
-    std::fprintf(stderr, "gpu_handler : started loading network.\n");
+    std::fprintf(stderr, "gpu_handler : started loading network from %s.\n", network_file.c_str());
     #endif // NDEBUG
 
 
@@ -100,14 +100,14 @@ gpu_handler::gpu_handler (const std::string &network_file)
                                  network_file.c_str());
         f.read((char *)&Rmin, sizeof Rmin);
         f.read((char *)&Rmax, sizeof Rmax);
+
+        #ifndef NDEBUG
+        std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
+        #endif
+
         torch::load(tmp_net, f);
         f.close();
     }
-
-    #ifndef NDEBUG
-    std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
-    #endif
-
 
     // we want to evaluate the network
     tmp_net->eval();
