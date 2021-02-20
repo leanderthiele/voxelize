@@ -15,7 +15,7 @@ struct Globals
 {
     #ifndef CPU_ONLY
     // gpu handling class
-    gpu_handler gpu;
+    gpu_handler * gpu;
     #endif // CPU_ONLY
 
     // communicate to root that workers are finished with all
@@ -59,16 +59,22 @@ struct Globals
 
     Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
              float *coords_, float *radii_, float *field_, float *box_,
-             const char *network_file_);
+             #ifndef CPU_ONLY
+             gpu_handler * gpu_
+             #endif // CPU_ONLY
+             );
 } globals;
 
 // --- Implementation ---
 
 Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
                   float *coords_, float *radii_, float *field_, float *box_,
-                  const char *network_file_) :
+                  #ifndef CPU_ONLY
+                  gpu_handler * gpu_
+                  #endif // CPU_ONLY
+                  ) :
     #ifndef CPU_ONLY
-    gpu { std::string(network_file_) },
+    gpu { gpu_ },
     #endif // CPU_ONLY
 
     Nthreads_tot { omp_get_max_threads() },

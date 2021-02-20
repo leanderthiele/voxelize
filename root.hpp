@@ -101,7 +101,7 @@ check_gpu_batch_queue ()
         size_t nbytes = gpu_batch_queue_item_ptr->gpu_tensor.nbytes();
 
         // find a stream for this calculation
-        if (!globals.gpu.get_resource(nbytes, network_ptr, device_ptr, stream_ptr))
+        if (!globals.gpu->get_resource(nbytes, network_ptr, device_ptr, stream_ptr))
         {
             // append this batch to the GPU -- we do a preliminary pop in the previous
             // critical section since we expect that in the majority of cases

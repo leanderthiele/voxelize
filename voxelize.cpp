@@ -53,15 +53,18 @@
 void
 voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
          float *coords, float *radii, float *field, float *box,
-         const char *network_file)
+         #ifndef CPU_ONLY
+         gpu_handler * gpu
+         #endif // CPU_ONLY
+         )
 {// {{{
-    #ifdef CPU_ONLY
-    assert(!network_file);
-    #endif // CPU_ONLY
-
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
-                      radii, field, box, network_file);
+                      radii, field, box,
+                      #ifndef CPU_ONLY
+                      gpu
+                      #endif // CPU_ONLY
+                      );
 
     auto t1 = std::chrono::steady_clock::now();
 
@@ -123,7 +126,16 @@ voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 int
 main ()
 {// {{{
+    // the GPU handler needs to be constructed only once and can be used for multiple calls
+    // to the voxelize function.
+    // This has the advantage that the network is not copied to the GPU every time voxelize()
+    // is called.
+    #ifndef CPU_ONLY
     const std::string net_fname = "./network_Rmin9.99999978e-03_Rmax1.00000000e+01_.pt";
+    auto gpu_ptr = new gpu_handler (net_fname);
+    #endif // CPU_ONLY
+
+    // read some hdf5 simulation file
     const std::string fname = "/projects/QUIJOTE/Leander/SU/hydro_test/seed1/0.00000000p/Arepo/snap_004.hdf5";
     const size_t PartType = 0;
     auto fptr = std::make_shared<H5::H5File>(fname, H5F_ACC_RDONLY);
@@ -133,16 +145,19 @@ main ()
     float *coordinates = (float *)ReadHDF5::read_field(fptr, "PartType0/Coordinates", sizeof(float), Nparticles, 3);
     float *density = (float *)ReadHDF5::read_field(fptr, "PartType0/Density", sizeof(float), Nparticles, 1);
     float *masses = (float *)ReadHDF5::read_field(fptr, "PartType0/Masses", sizeof(float), Nparticles, 1);
-    float *radii = (float *)std::malloc(Nparticles * sizeof(float));
 
+    // compute the particle radii from their volumes
+    float *radii = (float *)std::malloc(Nparticles * sizeof(float));
     for (size_t ii=0; ii != Nparticles; ++ii)
         radii[ii] = std::cbrt(masses[ii] / M_4PI_3f32 / density[ii]);
     
+    // allocate an output buffer for the data product and fill with zeros
     int64_t box_N = 256;
     float *box = (float *)std::malloc(box_N * box_N * box_N * sizeof(float));
     for (size_t ii=0; ii != (size_t)(box_N * box_N * box_N); ++ii)
         box[ii] = 0.0F;
 
+    // some debugging stuff
     for (size_t ii=0; ii != Nparticles; ++ii)
     {
         assert(density[ii] >= 0.0F);
@@ -151,24 +166,27 @@ main ()
             assert(coordinates[ii*3UL+jj]<=box_L && coordinates[ii*3UL+jj]>=0.0F);
     }
 
+    // call the main function
     voxelize(Nparticles, box_N, 1, box_L,
              coordinates, radii, density, box,
              #ifndef CPU_ONLY
-             net_fname.c_str()
-             #else // CPU_ONLY
-             nullptr
+             gpu_ptr
              #endif // CPU_ONLY
              );
 
-    std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
-
+    // save data product to file
     {
         auto f = std::fopen("box.bin", "wb");
         std::fwrite(box, sizeof(float), box_N*box_N*box_N, f);
         std::fclose(f);
     }
 
-    std::free(box);
+    // clean up
+    std::free(box); std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
+
+    #ifndef CPU_ONLY
+    delete gpu_ptr;
+    #endif // CPU_ONLY
 
     return 0;
 }// }}}
