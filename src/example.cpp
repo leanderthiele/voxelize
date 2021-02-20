@@ -66,9 +66,9 @@ main ()
 
     // call the main function
     voxelize(Nparticles, box_N, 1, box_L,
-             coordinates, radii, density, box,
+             coordinates, radii, density, box
              #ifndef CPU_ONLY
-             gpu_ptr
+             , gpu_ptr
              #endif // CPU_ONLY
              );
 
