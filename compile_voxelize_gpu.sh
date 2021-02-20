@@ -16,6 +16,8 @@ g++ -std=c++17 -O3 -g3 \
     -I${TORCH}/include \
     -I${CUDA}/include \
     -I${CUDNN}/include \
+    -I${VOXELIZE}/include \
+    -c \
     -o ${VOXELIZE}/build/voxelize_gpu.o ${VOXELIZE}/src/voxelize.cpp \
     -L${TORCH}/lib \
     -L${CUDA}/lib64 \

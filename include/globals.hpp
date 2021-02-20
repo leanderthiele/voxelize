@@ -58,9 +58,9 @@ struct Globals
     Globals () = default;
 
     Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_L_,
-             float *coords_, float *radii_, float *field_, float *box_,
+             float *coords_, float *radii_, float *field_, float *box_
              #ifndef CPU_ONLY
-             gpu_handler * gpu_
+             , gpu_handler * gpu_
              #endif // CPU_ONLY
              );
 } globals;
