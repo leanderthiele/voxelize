@@ -6,12 +6,17 @@
 #include <array>
 #include <vector>
 
-#include <torch/torch.h>
+#ifndef CPU_ONLY
+#   include <torch/torch.h>
+#endif // CPU_ONLY
 
 #include "geometry.hpp"
 
 
-struct Net : public torch::nn::Cloneable<Net>
+struct Net
+    #ifndef CPU_ONLY
+    : public torch::nn::Cloneable<Net>
+    #endif // CPU_ONLY
 {
     // number of floats in each item in a batch
     static constexpr size_t netw_item_size = 8;
@@ -22,15 +27,25 @@ struct Net : public torch::nn::Cloneable<Net>
     // number of neurons in a layer
     static constexpr size_t Nneurons = 32;
 
+    #ifndef CPU_ONLY
     // fully connected layers
     std::vector<torch::nn::Linear> fc;
+    #endif // CPU_ONLY
 
+    #ifndef CPU_ONLY
     Net ();
+    #else // CPU_ONLY
+    Net () = delete;
+    #endif // CPU_ONLY
 
+    #ifndef CPU_ONLY
     // need to override reset method to make this module cloneable
     void reset () override;
+    #endif // CPU_ONLY
 
+    #ifndef CPU_ONLY
     torch::Tensor forward (torch::Tensor &x);
+    #endif // CPU_ONLY
 
     template<typename T>
     static void
@@ -53,13 +68,16 @@ private :
 
 // --- Implementation ---
 
+#ifndef CPU_ONLY
 Net::Net ()
 {// {{{
     reset();
     
     assert(fc.size() == Nhidden+1);
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 void
 Net::reset ()
 {// {{{
@@ -73,7 +91,9 @@ Net::reset ()
                                                    ? 1
                                                    : Nneurons));
 }// }}}
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 torch::Tensor
 Net::forward (torch::Tensor &x)
 {// {{{
@@ -85,6 +105,7 @@ Net::forward (torch::Tensor &x)
     x = torch::hardsigmoid(fc[Nhidden]->forward(x));
     return x;
 }// }}}
+#endif // CPU_ONLY
 
 template<typename T>
 inline float

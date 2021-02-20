@@ -8,12 +8,6 @@
 // the user has available.
 #define BATCH_SIZE (1 << 17)
 
-// do not use the interpolating neural network, the code will be run
-// completely on CPUs.
-// No dependence on PyTorch now.
-// #define CPU_ONLY
-
-
 // -------------------------------------------
 // Other options that are most likely not
 // important for the user.

@@ -43,16 +43,18 @@
 //
 // 4) have CPU_ONLY macro
 //    -- with the same number of CPUs, this is probably about 10 times slower
+//    DONE
 //
 // 5) have SYNCHRONIZE macro
 //
 // 6) replace HYPOT calls
+//    DONE
 
 void
-voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
-             float *coords, float *radii, float *field, float *box,
-             const char *network_file)
-{
+voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
+         float *coords, float *radii, float *field, float *box,
+         const char *network_file)
+{// {{{
     #ifdef CPU_ONLY
     assert(!network_file);
     #endif // CPU_ONLY
@@ -115,12 +117,12 @@ voxelize_gpu(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
                          globals.cpu_queue.size());
     #endif // CPU_ONLY
     #endif // COUNT
-}
+}// }}}
 
 #ifdef TESTS
 int
 main ()
-{
+{// {{{
     const std::string net_fname = "./network_Rmin9.99999978e-03_Rmax1.00000000e+01_.pt";
     const std::string fname = "/projects/QUIJOTE/Leander/SU/hydro_test/seed1/0.00000000p/Arepo/snap_004.hdf5";
     const size_t PartType = 0;
@@ -149,14 +151,14 @@ main ()
             assert(coordinates[ii*3UL+jj]<=box_L && coordinates[ii*3UL+jj]>=0.0F);
     }
 
-    voxelize_gpu(Nparticles, box_N, 1, box_L,
-                 coordinates, radii, density, box,
-                 #ifndef CPU_ONLY
-                 net_fname.c_str()
-                 #else // CPU_ONLY
-                 nullptr
-                 #endif // CPU_ONLY
-                 );
+    voxelize(Nparticles, box_N, 1, box_L,
+             coordinates, radii, density, box,
+             #ifndef CPU_ONLY
+             net_fname.c_str()
+             #else // CPU_ONLY
+             nullptr
+             #endif // CPU_ONLY
+             );
 
     std::free(coordinates); std::free(density); std::free(masses); std::free(radii);
 
@@ -166,6 +168,8 @@ main ()
         std::fclose(f);
     }
 
+    std::free(box);
+
     return 0;
-}
+}// }}}
 #endif // TESTS

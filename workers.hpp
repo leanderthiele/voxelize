@@ -155,8 +155,6 @@ workers_process ()
             float *part_centre = globals.coords + 3UL*pp;
             float *weight = globals.field + globals.dim*pp;
 
-            add_to_cpu_queue_if_full(cpu_queue_item_ptr);
-
             #ifndef CPU_ONLY
             #ifndef WORKERS_MAKE_BATCHES
             add_to_gpu_queue_if_full(gpu_queue_item_ptr);
@@ -247,6 +245,7 @@ workers_process ()
 
                         // overlap has been trivially or analytically computed,
                         // needs only to be added
+                        add_to_cpu_queue_if_full(cpu_queue_item_ptr);
                         cpu_queue_item_ptr->add(idx, weight, overlap);
                     }// for zz
                 }// for yy

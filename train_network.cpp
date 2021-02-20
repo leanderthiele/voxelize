@@ -5,6 +5,10 @@
 #include <utility>
 #include <memory>
 
+#ifdef CPU_ONLY
+#   error "train_network.cpp should only be compiled without the CPU_ONLY macro defined."
+#endif // CPU_ONLY
+
 #include <torch/torch.h>
 
 #include "file_names.hpp"

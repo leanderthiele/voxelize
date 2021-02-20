@@ -10,6 +10,10 @@
 #include "network.hpp"
 #include "overlap_lft_double.hpp"
 
+#ifndef CPU_ONLY
+#   error "generate_samples.cpp should only be compiled with the CPU_ONLY macro defined."
+#endif // CPU_ONLY
+
 static constexpr size_t Nsamples = 1 << 26;
 static constexpr float  Rmin     = 0.01;
 static constexpr float  Rmax     = 10.0;

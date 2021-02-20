@@ -11,7 +11,7 @@ g++ -std=c++17 -O3 -g3 \
     -I${TORCH}/include \
     -I${CUDA}/include \
     -I${CUDNN}/include \
-    -o $1 $1.cpp \
+    -o $1_gpu $1.cpp \
     -L${TORCH}/lib \
     -L${CUDA}/lib64 \
     -L${CUDNN}/lib64 \

@@ -64,9 +64,9 @@ gpu_queue_item::is_full ()
 
 cpu_queue_item::cpu_queue_item ()
 {// {{{
-    box_indices.reserve(reserv_size);
-    weights.reserve(reserv_size * globals.dim);
-    overlaps.reserve(reserv_size);
+    box_indices.reserve(batch_size);
+    weights.reserve(batch_size * globals.dim);
+    overlaps.reserve(batch_size);
 }// }}}
 
 #ifndef CPU_ONLY
@@ -149,7 +149,7 @@ cpu_queue_item::add (int64_t box_index, const float *weight, float overlap)
 inline bool
 cpu_queue_item::is_full ()
 {// {{{
-    return box_indices.size() >= approx_size;
+    return box_indices.size() >= batch_size;
 }// }}}
 
 inline void
