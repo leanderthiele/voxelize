@@ -123,15 +123,12 @@ struct gpu_batch_queue_item
     bool is_full ();
     #endif // WORKERS_MAKE_BATCHES
 
-    // these are the non-templated functions the switch to the templates
-    #ifdef WORKERS_MAKE_BATCHES
-    void add (std::shared_ptr<gpu_queue_item> gpu_input);
-    #endif // WORKERS_MAKE_BATCHES
-
     #ifndef WORKERS_MAKE_BATCHES
     void add (std::shared_ptr<gpu_queue_item> gpu_input);
     #else // WORKERS_MAKE_BATCHES
     template<int DIM>
+    void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
+
     void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
     #endif // WORKERS_MAKE_BATCHES
 };// }}}
