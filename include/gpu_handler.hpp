@@ -40,12 +40,15 @@ class gpu_handler
     std::vector<std::vector<std::shared_ptr<StreamWState>>> streams;
     std::vector<std::shared_ptr<Net>> networks;
 
-public :
     float Rmin, Rmax;
+public :
 
     gpu_handler () = default;
 
     gpu_handler (const std::string &network_file);
+
+    float get_Rmin ();
+    float get_Rmax ();
 
     // returns true if it was possible to find an idle stream
     bool get_resource (size_t nbytes,
