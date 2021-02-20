@@ -18,6 +18,7 @@
 #   include "globals.hpp"
 #   include "network.hpp"
 #   include "gpu_handler.hpp"
+#   include "gpu_handler_implementation.hpp"
 #endif // CPU_ONLY
 
 using namespace Voxelize;
