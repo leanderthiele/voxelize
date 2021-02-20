@@ -11,7 +11,7 @@ g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
     -UCPU_ONLY \
-    -DNETWORK_PATH=${NETWORK_PATH} \
+    -DNETWORK_PATH=\"${NETWORK_PATH}\" \
     -I${TORCH}/include/torch/csrc/api/include/ \
     -I${TORCH}/include \
     -I${CUDA}/include \

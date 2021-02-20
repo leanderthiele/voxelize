@@ -13,4 +13,4 @@ g++ -std=c++17 -O3 -g3 \
     -o ${VOXELIZE}/build/voxelize_cpu.o ${VOXELIZE}/src/voxelize.cpp \
     -fopenmp
 
-ar rcs ${VOXELIZE}/build/libvoxelize_cpu.a ${VOXELIZE}/src/build/voxelize_cpu.o
+ar rcs ${VOXELIZE}/build/libvoxelize_cpu.a ${VOXELIZE}/build/voxelize_cpu.o
