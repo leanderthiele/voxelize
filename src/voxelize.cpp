@@ -13,6 +13,12 @@
 #   include "cuda_profiler_api.h"
 #endif // CPU_ONLY
 
+#ifdef CPU_ONLY
+#   include "voxelize_cpu.hpp"
+#else // CPU_ONLY
+#   include "voxelize_gpu.hpp"
+#endif // CPU_ONLY
+
 #include "geometry.hpp"
 #include "globals.hpp"
 #include "root.hpp"
@@ -27,8 +33,6 @@
 #   include <cmath>
 #   include <chrono>
 #endif // TESTS
-
-using namespace Voxelize;
 
 // TODO
 //
@@ -55,6 +59,8 @@ using namespace Voxelize;
 //
 // 6) replace HYPOT calls
 //    DONE
+
+namespace Voxelize {
 
 Globals globals;
 
@@ -130,3 +136,5 @@ voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     #endif // COUNT
 }// }}}
 
+
+} // namespace Voxelize
