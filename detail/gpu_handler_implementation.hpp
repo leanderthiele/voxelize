@@ -64,8 +64,11 @@ public :
     #endif // RANDOM_STREAM
 };// }}}
 
-
 // --- Implementation ---
+
+// helper function that load the network and retrieves information about Rmin, Rmax from the directory
+static void
+load_network (const std::string &network_file, std::shared_ptr<Net> &net_ptr, float &Rmin, float &Rmax);
 
 gpu_handler::gpu_handler (const std::string &network_file)
 {// {{{
@@ -92,22 +95,11 @@ gpu_handler::gpu_handler (const std::string &network_file)
 
     // load the network onto the CPU
     auto tmp_net = std::make_shared<Net>();
+    load_network(network_file, tmp_net, Rmin, Rmax);
 
-    {
-        std::ifstream f (network_file, std::ifstream::binary);
-        if (!f.is_open())
-            std::fprintf(stderr, "failed to open network file %s\n",
-                                 network_file.c_str());
-        f.read((char *)&Rmin, sizeof Rmin);
-        f.read((char *)&Rmax, sizeof Rmax);
-
-        #ifndef NDEBUG
-        std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
-        #endif
-
-        torch::load(tmp_net, f);
-        f.close();
-    }
+    #ifndef NDEBUG
+    std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
+    #endif
 
     // we want to evaluate the network
     tmp_net->eval();
@@ -299,5 +291,19 @@ gpu_handler::get_resource (size_t nbytes,
     return true;
 }// }}}
 
+static void
+load_network (const std::string &network_file, std::shared_ptr<Net> &net_ptr, float &Rmin, float &Rmax)
+{// {{{
+    // load the network
+    torch::load(net_ptr, network_file+"/network.pt");
+
+    // load Rmin, Rmax
+    {
+        auto f = std::fopen((network_file+"/Rlims.txt").c_str(), "r");
+        std::fscanf(f, "Rmin = %f\n", &Rmin);
+        std::fscanf(f, "Rmax = %f\n", &Rmax);
+        std::fclose(f);
+    }
+}// }}}
 
 #endif // GPU_HANDLER_IMPLEMENTATION_HPP

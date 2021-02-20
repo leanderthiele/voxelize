@@ -5,6 +5,7 @@
 #include <utility>
 #include <memory>
 #include <fstream>
+#include <filesystem>
 
 #ifdef CPU_ONLY
 #   error "train_network.cpp should only be compiled without the CPU_ONLY macro defined."
@@ -101,6 +102,9 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (
 // computes the loss function
 torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ);
 
+// saves the network and some metadata to the directory named network_file
+void save_network (std::shared_ptr<Net> net_ptr);
+
 int main ()
 {// {{{
     set_device();
@@ -161,16 +165,7 @@ int main ()
     }
 
     // save network
-    {
-        std::ofstream f (network_fname, std::ofstream::binary);
-        if (!f.is_open())
-            std::fprintf(stderr, "could not open network output file %s\n",
-                                 network_fname.c_str());
-        f.write((const char *)&Rmin, sizeof Rmin);
-        f.write((const char *)&Rmax, sizeof Rmin);
-        torch::save(net, f);
-        f.close();
-    }
+    save_network(net);
 
     // save validation loss
     save_vec(validation_loss, val_fname);
@@ -350,4 +345,31 @@ torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ)
     static auto MSE = torch::nn::MSELoss();
 
     return MSE(pred, targ);
+}// }}}
+
+void save_network (std::shared_ptr<Net> net_ptr)
+{// {{{
+    // make sure we have the directory
+    std::filesystem::create_directories(network_fname);   
+
+    // serialize the network
+    torch::save(net_ptr, network_fname+"/network.pt");
+
+    // write Rmin, Rmax to file
+    {
+        auto f = std::fopen((network_fname+"/Rlims.txt").c_str(), "w");
+        std::fprintf(f, "Rmin = %.8e\n", Rmin);
+        std::fprintf(f, "Rmax = %.8e\n", Rmax);
+        std::fclose(f);
+    }
+
+    // write key elements of the network architectue to file
+    // (this is just for human readable information purposes)
+    {
+        auto f = std::fopen((network_fname+"/architecture.txt").c_str(), "w");
+        std::fprintf(f, "netw_item_size = %lu\n", Net::netw_item_size);
+        std::fprintf(f, "Nhidden = %lu\n", Net::Nhidden);
+        std::fprintf(f, "Nneurons = %lu\n", Net::Nneurons);
+        std::fclose(f);
+    }
 }// }}}
