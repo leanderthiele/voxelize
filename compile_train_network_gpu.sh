@@ -15,10 +15,10 @@ g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
     -UCPU_ONLY \
-    -DNETWORK_PATH=${NETWORK_PATH} \
-    -DVALIDATION_LOSS_PATH=${VALIDATION_LOSS_PATH} \
-    -DINPUTS_PATH=${INPUTS_PATH} \
-    -DOUTPUTS_PATH=${OUTPUTS_PATH} \
+    -DNETWORK_PATH=\"${NETWORK_PATH}\" \
+    -DVALIDATION_LOSS_PATH=\"${VALIDATION_LOSS_PATH}\" \
+    -DINPUTS_PATH=\"${INPUTS_PATH}\" \
+    -DOUTPUTS_PATH=\"${OUTPUTS_PATH}\" \
     -I${TORCH}/include/torch/csrc/api/include/ \
     -I${TORCH}/include \
     -I${CUDA}/include \

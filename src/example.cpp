@@ -12,9 +12,11 @@
 #   include "voxelize_gpu.hpp"
 #endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 #ifndef NETWORK_PATH
 #   define NETWORK_PATH "./data/network.pt"
 #endif // NETWORK_PATH
+#endif // CPU_ONLY
 
 // 4pi/3
 #ifndef M_4PI_3f32
