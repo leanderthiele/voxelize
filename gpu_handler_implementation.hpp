@@ -7,13 +7,13 @@
 #include <memory>
 #include <algorithm>
 #include <limits>
+#include <fstream>
 
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 
 #include "c10/cuda/CUDAStream.h"
 
-#include "file_names.hpp"
 #include "gpu_handler.hpp"
 #include "globals.hpp"
 
@@ -41,17 +41,25 @@ gpu_handler::gpu_handler (const std::string &network_file)
     std::fprintf(stderr, "gpu_handler : started loading network.\n");
     #endif // NDEBUG
 
-    // get the interval in which the network is trustworthy from the filename
-    assert(read_fname(network_file, Rmin, Rmax));
+
+    // load the network onto the CPU
+    auto tmp_net = std::make_shared<Net>();
+
+    {
+        std::ifstream f (network_file, std::ifstream::binary);
+        if (!f.is_open())
+            std::fprintf(stderr, "failed to open network file %s\n",
+                                 network_file.c_str());
+        f.read((char *)&Rmin, sizeof Rmin);
+        f.read((char *)&Rmax, sizeof Rmax);
+        torch::load(tmp_net, f);
+        f.close();
+    }
 
     #ifndef NDEBUG
     std::fprintf(stderr, "gpu_handler : found network with Rmin=%.2e and Rmax=%.2e\n", Rmin, Rmax);
     #endif
 
-    // load the network onto the CPU
-    auto tmp_net = std::make_shared<Net>();
-    if (network_file != "NO_FILE")
-        torch::load(tmp_net, network_file);
 
     // we want to evaluate the network
     tmp_net->eval();

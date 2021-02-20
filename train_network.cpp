@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <memory>
+#include <fstream>
 
 #ifdef CPU_ONLY
 #   error "train_network.cpp should only be compiled without the CPU_ONLY macro defined."
@@ -11,7 +12,6 @@
 
 #include <torch/torch.h>
 
-#include "file_names.hpp"
 #include "network.hpp"
 
 bool gpu_avail;
@@ -38,6 +38,8 @@ static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
 // file names
+static const std::string network_fname = "network.pt";
+static const std::string val_fname = "validation_loss.bin";
 static const std::string in_fname = "inputs.bin";
 static const std::string out_fname = "outputs.bin";
 
@@ -110,10 +112,19 @@ int main ()
     }
 
     // save network
-    torch::save(net, get_fname("network", Rmin, Rmax, ".pt"));
+    {
+        std::ofstream f (network_fname, std::ofstream::binary);
+        if (!f.is_open())
+            std::fprintf(stderr, "could not open network output file %s\n",
+                                 network_fname.c_str());
+        f.write((const char *)&Rmin, sizeof Rmin);
+        f.write((const char *)&Rmax, sizeof Rmin);
+        torch::save(net, f);
+        f.close();
+    }
 
     // save validation loss
-    save_vec(validation_loss, get_fname("validation_loss", Rmin, Rmax, ".bin"));
+    save_vec(validation_loss, val_fname);
 
     // test the network
     net->eval();
