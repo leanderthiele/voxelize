@@ -68,4 +68,6 @@
 //  --- currently : not sure!
 #define TRY_COMPUTE
 
+#define PRELU
+
 #endif // DEFINES_HPP

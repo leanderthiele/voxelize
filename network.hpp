@@ -1,6 +1,8 @@
 #ifndef NETWORK_HPP
 #define NETWORK_HPP
 
+#include "defines.hpp"
+
 #include <cmath>
 #include <string>
 #include <array>
@@ -17,7 +19,7 @@ struct Net
     #ifndef CPU_ONLY
     : public torch::nn::Cloneable<Net>
     #endif // CPU_ONLY
-{
+{// {{{
     // number of floats in each item in a batch
     static constexpr size_t netw_item_size = 8;
 
@@ -30,6 +32,9 @@ struct Net
     #ifndef CPU_ONLY
     // fully connected layers
     std::vector<torch::nn::Linear> fc;
+    #ifdef PRELU
+    std::vector<torch::Tensor> prelu_weights;
+    #endif // PRELU
     #endif // CPU_ONLY
 
     #ifndef CPU_ONLY
@@ -64,7 +69,7 @@ private :
     template<typename T>
     static float
     input_normalization_val (const T &cub, float R, size_t idx);
-};
+};// }}}
 
 // --- Implementation ---
 
@@ -90,6 +95,13 @@ Net::reset ()
                                                    (ii==Nhidden)
                                                    ? 1
                                                    : Nneurons));
+
+    #ifdef PRELU
+    prelu_weights = std::vector<torch::Tensor>(Nhidden);
+    for (size_t ii=0UL; ii != Nhidden; ++ii)
+        prelu_weights[ii] = register_parameter("prelu_weight" + std::to_string(ii),
+                                               torch::normal(0.01, 0.003, {Nneurons}));
+    #endif // PRELU
 }// }}}
 #endif // CPU_ONLY
 
@@ -99,7 +111,12 @@ Net::forward (torch::Tensor &x)
 {// {{{
     // go through the hidden layers
     for (size_t ii=0; ii != Nhidden; ++ii)
-        x = torch::leaky_relu(fc[ii]->forward(x));
+        #ifdef PRELU
+        x = torch::nn::functional::prelu(fc[ii]->forward(x), prelu_weights[ii]);
+        #else // PRELU
+        x = torch::nn::functional::leaky_relu
+            (fc[ii]->forward(x), torch::nn::functional::LeakyReLUFuncOptions().inplace(true));
+        #endif // PRELU
     
     // apply the final layer with the output activation function
     x = torch::hardsigmoid(fc[Nhidden]->forward(x));
