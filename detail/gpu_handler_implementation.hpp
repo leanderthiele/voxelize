@@ -144,6 +144,19 @@ gpu_handler::gpu_handler (const std::string &network_file)
     #endif // NDEBUG
 }// }}}
 
+inline float
+gpu_handler::get_Rmin ()
+{// {{{
+    return Rmin;
+}// }}}
+
+inline float
+gpu_handler::get_Rmax ()
+{// {{{
+    return Rmax;
+}// }}}
+
+
 inline bool
 gpu_handler::get_resource (size_t nbytes,
                            std::shared_ptr<Net> &network,

@@ -208,7 +208,7 @@ workers_process ()
                         // the overlap is not trivially computed
                         {
                             #ifndef CPU_ONLY
-                            if (R < globals.gpu->Rmin || R > globals.gpu->Rmax)
+                            if (R < globals.gpu->get_Rmin() || R > globals.gpu->get_Rmax())
                             // the radius falls outside the interpolated regime,
                             // we need to do the full analytical calculation
                             {
@@ -217,7 +217,7 @@ workers_process ()
 
                                 #ifdef COUNT
                                 #ifndef CPU_ONLY
-                                if (R < globals.gpu->Rmin)
+                                if (R < globals.gpu->get_Rmin())
                                     ++exact_calculations_lo;
                                 else
                                     ++exact_calculations_hi;
