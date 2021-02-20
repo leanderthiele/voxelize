@@ -3,9 +3,8 @@
 
 #include "defines.hpp"
 
-#ifndef NDEBUG
-#   include <cstdio>
-#endif
+#include <cstdio>
+#include <exception>
 
 #ifndef CPU_ONLY
 #   include "cuda.h"
@@ -23,6 +22,23 @@
 
 // --- Implementation ---
 
+// simple Macro to choose a templated version of a (void) function (based on globals.dim)
+// Note that the treatment of potentially empty __VA_ARGS__ is a compiler extension,
+// but everyone has gcc right?
+#define CHOOSE_TEMPL(fct, ...)                          \
+    do                                                  \
+    {                                                   \
+        switch (globals.dim)                            \
+        {                                               \
+            case (1) : fct<1>(##__VA_ARGS__); break;    \
+            case (2) : fct<2>(##__VA_ARGS__); break;    \
+            case (3) : fct<3>(##__VA_ARGS__); break;    \
+            default  : std::fprintf(stderr,             \
+                       "Dimension %ld not implemented", \
+                       globals.dim); std::terminate();  \
+        }                                               \
+    } while (0)
+
 #ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 gpu_queue_item::gpu_queue_item ()
@@ -36,18 +52,24 @@ gpu_queue_item::gpu_queue_item ()
 
 #ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
+template<int DIM>
 inline void
 gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
 {// {{{
     // add the straightforward things
     box_indices.push_back(box_index);
 
-    #pragma loop_count (1, 2, 3)
-    for (int ii=0; ii != globals.dim; ++ii)
+    for (int ii=0; ii != DIM; ++ii)
         weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // append the network inputs
     Net::input_normalization(cub, R, network_inputs);
+}// }}}
+
+inline void
+gpu_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
+{// {{{
+    CHOOSE_TEMPL(add, box_index, cub, R, weight);
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
 #endif // CPU_ONLY
@@ -106,10 +128,8 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
     {
         for (size_t ii=0; ii != x->box_indices.size(); ++ii)
             box_indices.push_back(x->box_indices[ii]);
-        for (size_t ii=0; ii != x->box_indices.size(); ++ii)
-            #pragma loop_count (1, 2, 3)
-            for (int64_t dd = 0; dd != globals.dim; ++dd)
-                weights.push_back(x->weights[ii*globals.dim+dd]);
+        for (size_t ii=0; ii != x->box_indices.size() * globals.dim; ++ii)
+                weights.push_back(x->weights[ii]);
     }
     #endif // WORKERS_MAKE_BATCHES
 
@@ -133,17 +153,23 @@ cpu_queue_item::cpu_queue_item (std::shared_ptr<gpu_batch_queue_item> gpu_result
 }// }}}
 #endif // CPU_ONLY
 
+template<int DIM>
 inline void
 cpu_queue_item::add (int64_t box_index, const float *weight, float overlap)
 {// {{{
     box_indices.push_back(box_index);
 
-    #pragma loop_count (1, 2, 3)
-    for (int ii=0; ii != globals.dim; ++ii)
+    for (int ii=0; ii != DIM; ++ii)
         weights.push_back(weight[ii]);
     
     assert(overlap >= 0.0F);
     overlaps.push_back(overlap);
+}// }}}
+
+inline void
+cpu_queue_item::add (int64_t box_index, const float *weight, float overlap)
+{// {{{
+    CHOOSE_TEMPL(add, box_index, weight, overlap);
 }// }}}
 
 inline bool
@@ -152,6 +178,7 @@ cpu_queue_item::is_full ()
     return box_indices.size() >= batch_size;
 }// }}}
 
+template<int DIM>
 inline void
 cpu_queue_item::add_to_box ()
 {// {{{
@@ -159,17 +186,22 @@ cpu_queue_item::add_to_box ()
            && box_indices.size() == overlaps.size());
 
     for (size_t ii=0; ii != box_indices.size(); ++ii)
-        #pragma loop_count (1, 2, 3)
-        for (int64_t dd=0; dd != globals.dim; ++dd)
+        for (int64_t dd=0; dd != DIM; ++dd)
         {
             assert(overlaps[ii] >= 0.0F);
 
             #if defined(MULTI_ROOT) && !defined(EXTRA_ROOT_ADD) && !defined(CPU_ONLY)
             #   pragma omp atomic
             #endif // MULTI_ROOT, EXTRA_ROOT_ADD, CPU_ONLY
-            globals.box[globals.dim*box_indices[ii]+dd]
-                += weights[ii*globals.dim+dd] * overlaps[ii];
+            globals.box[DIM*box_indices[ii]+dd]
+                += weights[ii*DIM+dd] * overlaps[ii];
         }
+}// }}}
+
+inline void
+cpu_queue_item::add_to_box ()
+{// {{{
+    CHOOSE_TEMPL(add_to_box);
 }// }}}
 
 #ifndef CPU_ONLY
@@ -222,19 +254,25 @@ gpu_batch_queue_item::add (std::shared_ptr<gpu_queue_item> gpu_input)
                 = gpu_input->network_inputs[ii*Net::netw_item_size+jj];
 }// }}}
 #else // WORKERS_MAKE_BATCHES
+template<int DIM>
 inline void
 gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
 {// {{{
     box_indices.push_back(box_index);
 
-    #pragma loop_count (1, 2, 3)
-    for (int ii=0; ii != globals.dim; ++ii)
+    for (int ii=0; ii != DIM; ++ii)
         weights.push_back(weight[ii] * std::min(M_4PI_3f32*R*R*R, 1.0F));
 
     // write network inputs into tensor
     Net::input_normalization(cub, R, gpu_tensor_accessor[current_idx]);
 
     ++current_idx;
+}// }}}
+
+inline void
+gpu_batch_queue_item::add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight)
+{// {{{
+    CHOOSE_TEMPL(add, box_index, cub, R, weight);
 }// }}}
 #endif // WORKERS_MAKE_BATCHES
 #endif // CPU_ONLY
@@ -300,5 +338,6 @@ gpu_process_item::compute ()
 }// }}}
 #endif // CPU_ONLY
 
+#undef CHOOSE_TEMPL
 
 #endif // QUEUES_IMPLEMENTATION_HPP

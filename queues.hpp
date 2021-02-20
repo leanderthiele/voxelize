@@ -30,8 +30,8 @@
 struct cpu_queue_item;
 
 #ifndef CPU_ONLY
-struct gpu_queue_item;
 struct gpu_batch_queue_item;
+struct gpu_queue_item;
 struct gpu_process_item;
 #endif // CPU_ONLY
 
@@ -79,6 +79,10 @@ struct gpu_queue_item
     gpu_queue_item ();
 
     // add one item requiring computation on the gpu
+    // (this is only a wrapper around the templated function)
+    void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
+
+    template<int DIM>
     void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
 
     bool is_full ();
@@ -119,9 +123,15 @@ struct gpu_batch_queue_item
     bool is_full ();
     #endif // WORKERS_MAKE_BATCHES
 
+    // these are the non-templated functions the switch to the templates
+    #ifdef WORKERS_MAKE_BATCHES
+    void add (std::shared_ptr<gpu_queue_item> gpu_input);
+    #endif // WORKERS_MAKE_BATCHES
+
     #ifndef WORKERS_MAKE_BATCHES
     void add (std::shared_ptr<gpu_queue_item> gpu_input);
     #else // WORKERS_MAKE_BATCHES
+    template<int DIM>
     void add (int64_t box_index, std::array<float,3> &cub, float R, const float *weight);
     #endif // WORKERS_MAKE_BATCHES
 };// }}}
@@ -146,9 +156,15 @@ struct cpu_queue_item
 
     void add (int64_t box_index, const float *weight, float overlap);
 
+    template<int DIM>
+    void add (int64_t box_index, const float *weight, float overlap);
+
     bool is_full ();
 
     // the main functionality of this class: transfer the data into the main box
+    void add_to_box ();
+
+    template<int DIM>
     void add_to_box ();
 };// }}}
 
