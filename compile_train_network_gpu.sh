@@ -25,7 +25,7 @@ g++ -std=c++17 -O3 -g3 \
     -I${CUDNN}/include \
     -I${VOXELIZE}/include \
     -I${VOXELIZE}/detail \
-    -o train_network_gpu train_network.cpp \
+    -o ${VOXELIZE}/train_network_gpu ${VOXELIZE}/src/train_network.cpp \
     -L${TORCH}/lib \
     -L${CUDA}/lib64 \
     -L${CUDNN}/lib64 \
