@@ -260,7 +260,7 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b)
     for (size_t ii=0; ii != batchsize;
                ++ii, current_idx[bidx]=(current_idx[bidx]+1)%sample_lengths[bidx])
     {
-        const float *in_data = inputs.data() + sample_offsets[bidx] + current_idx[bidx]*in_stride;
+        const float *in_data = inputs.data() + (sample_offsets[bidx] + current_idx[bidx])*in_stride;
         // Note : the input that we get from file has the rotations already modded out,
         //        so we don't have to do this here (this saves a bit of runtime)
         Net::input_normalization(in_data, in_acc[ii], /*do_rotations=*/false);
