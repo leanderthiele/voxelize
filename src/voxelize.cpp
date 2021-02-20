@@ -26,8 +26,6 @@
 #   include <cstdlib>
 #   include <cmath>
 #   include <chrono>
-#   include "H5Cpp.h"
-#   include "read_hdf5.hpp"
 #endif // TESTS
 
 // TODO

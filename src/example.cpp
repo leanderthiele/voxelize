@@ -1,6 +1,8 @@
 #include <cmath>
 #include <string>
 
+#include "H5Cpp.h"
+
 #include "read_hdf5.hpp"
 
 // Include the appropriate header file
