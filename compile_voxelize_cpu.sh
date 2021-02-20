@@ -9,6 +9,7 @@ g++ -std=c++17 -O3 -g3 \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
     -DCPU_ONLY \
     -I${VOXELIZE}/include \
+    -I${VOXELIZE}/detail \
     -c \
     -o ${VOXELIZE}/build/voxelize_cpu.o ${VOXELIZE}/src/voxelize.cpp \
     -fopenmp

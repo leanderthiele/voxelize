@@ -10,8 +10,7 @@
 #include "H5File.h"
 #include "H5public.h"
 
-namespace ReadHDF5
-{
+namespace ReadHDF5 {
 
 static void *
 read_field (std::shared_ptr<H5::H5File> fptr, const std::string &name,

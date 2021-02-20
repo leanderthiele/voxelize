@@ -32,7 +32,7 @@ main ()
     // is called.
     #ifndef CPU_ONLY
     const std::string net_fname = NETWORK_PATH;
-    auto gpu_ptr = new gpu_handler (net_fname);
+    auto gpu_ptr = new Voxelize::gpu_handler (net_fname);
     #endif // CPU_ONLY
 
     // read some hdf5 simulation file
@@ -67,12 +67,12 @@ main ()
     }
 
     // call the main function
-    voxelize(Nparticles, box_N, 1, box_L,
-             coordinates, radii, density, box
-             #ifndef CPU_ONLY
-             , gpu_ptr
-             #endif // CPU_ONLY
-             );
+    Voxelize::voxelize(Nparticles, box_N, 1, box_L,
+                       coordinates, radii, density, box
+                       #ifndef CPU_ONLY
+                       , gpu_ptr
+                       #endif // CPU_ONLY
+                       );
 
     // save data product to file
     {

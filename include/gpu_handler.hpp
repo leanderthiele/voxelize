@@ -18,51 +18,11 @@
 #include <c10/core/Device.h>
 #include <c10/cuda/CUDAStream.h>
 
-// a wrapper around a CUDA Stream that captures
-// whether the stream can be used for computations
-// or whether it is currently busy
-class StreamWState
-{// {{{
-    #ifndef RANDOM_STREAM
-    bool is_busy; 
-    #endif // RANDOM_STREAM
-public :
-    c10::cuda::CUDAStream cstream;
+namespace Voxelize {
 
-    StreamWState (size_t device_idx, bool high_priority=false) :
-        #ifndef RANDOM_STREAM
-        is_busy { false },
-        #endif // RANDOM_STREAM
-        cstream { c10::cuda::getStreamFromPool(high_priority, device_idx) }
-    { }
-    
-    bool operator==(const StreamWState &other) const
-    {
-        // use the overloaded == operator from the CUDAStream wrapper
-        return cstream == other.cstream;
-    }
-    
-    bool operator!=(const StreamWState &other) const
-    {
-        // use the overloaded != operator from the CUDAStream wrapper
-        return cstream != other.cstream;
-    }
-
-    #ifndef RANDOM_STREAM
-    void set_busy (bool new_value)
-    {
-        assert(new_value != is_busy);
-        is_busy = new_value;
-    }
-    bool get_busy () const
-    {
-        return is_busy;
-    }
-    #endif // RANDOM_STREAM
-};// }}}
-
-// forward declare Net here so that someone including
-// this header file doesn't see the Net definition
+// forward declare Net and StreamWState here so that someone including
+// this header file doesn't see the definitions
+class StreamWState;
 struct Net;
 
 class gpu_handler
@@ -92,5 +52,7 @@ public :
                        std::shared_ptr<c10::Device> &device,
                        std::shared_ptr<StreamWState> &stream);
 };// }}}
+
+} // namespace Voxelize
 
 #endif // GPU_HANDLER_HPP

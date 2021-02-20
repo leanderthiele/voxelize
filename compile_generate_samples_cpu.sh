@@ -12,5 +12,6 @@ g++ -std=c++17 -O3 -g3 \
     -DINPUTS_PATH=\"${INPUTS_PATH}\" \
     -DOUTPUTS_PATH=\"${OUTPUTS_PATH}\" \
     -I${VOXELIZE}/include \
+    -I${VOXELIZE}/detail \
     -DCPU_ONLY \
     -o generate_samples_cpu ${VOXELIZE}/src/generate_samples.cpp
