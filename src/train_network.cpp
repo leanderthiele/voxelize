@@ -35,13 +35,13 @@ bool gpu_avail;
 std::shared_ptr<c10::Device> device_ptr;
 
 static constexpr size_t batchsize = 4096;
-static constexpr size_t Nepoch = 3000;
+static constexpr size_t Nepoch = 4000;
 static constexpr size_t Nbatches_epoch = 100;
  
 // initial learning rate
 static constexpr double learning_rate = 1e-3;
 // how many epochs elapse before the learning rate is reduced
-static constexpr size_t lr_sched_rate = 300;
+static constexpr size_t lr_sched_rate = 400;
 // by how much to reduce the learning rate
 static constexpr double lr_sched_fact = 0.7;
 
@@ -263,7 +263,7 @@ void split_samples ()
     sample_offsets[(size_t)BatchType::testing] = Nsamples - batchsize;
 
     // then we want some validation data
-    sample_offsets[(size_t)BatchType::validation] = Nsamples - 0.2*Nsamples;
+    sample_offsets[(size_t)BatchType::validation] = 0.8*Nsamples;
 
     // the rest is for training
     sample_offsets[(size_t)BatchType::training] = 0;
@@ -274,6 +274,13 @@ void split_samples ()
         sample_lengths[ii] = sample_offsets[ii+1] - sample_offsets[ii];
         assert(sample_lengths[ii] <= Nsamples);
     }
+
+    #ifndef NDEBUG
+    for (size_t ii=0; ii != 3; ++ii)
+    {
+        std::fprintf(stderr, "%lu\t%lu\n", sample_offsets[ii], sample_lengths[ii]);
+    }
+    #endif // NDEBUG
 }// }}}
 #endif // SPLIT_SAMPLES
 
@@ -291,7 +298,7 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (
 
     static auto opt = torch::TensorOptions()
                         .dtype(torch::kFloat32)
-                        .requires_grad(true)
+                        .requires_grad(false)
                         .device(torch::DeviceType::CPU)
                         .pinned_memory(gpu_avail);
 
@@ -327,7 +334,7 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (
         #ifndef SPLIT_SAMPLES
         out_acc[ii][0] = outputs[current_idx];
         #else // SPLIT_SAMPLES
-        out_acc[ii][0] = outputs[current_idx[bidx]];
+        out_acc[ii][0] = outputs[ sample_offsets[bidx]+current_idx[bidx] ];
         #endif // SPLIT_SAMPLES
     }
 

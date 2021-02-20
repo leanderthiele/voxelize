@@ -15,6 +15,7 @@ g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
     -UCPU_ONLY \
+    -DSPLIT_SAMPLES \
     -DNETWORK_PATH=\"${NETWORK_PATH}\" \
     -DVALIDATION_LOSS_PATH=\"${VALIDATION_LOSS_PATH}\" \
     -DINPUTS_PATH=\"${INPUTS_PATH}\" \
