@@ -18,12 +18,13 @@
 #include <c10/core/Device.h>
 #include <c10/cuda/CUDAStream.h>
 
-namespace Voxelize {
-
 // forward declare Net and StreamWState here so that someone including
 // this header file doesn't see the definitions
+// (do this outside the namespace so no ambiguities)
 class StreamWState;
 struct Net;
+
+namespace Voxelize {
 
 class gpu_handler
 {// {{{
