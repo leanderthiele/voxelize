@@ -15,10 +15,6 @@
 #   define NETWORK_PATH "./data/network"
 #endif // NETWORK_PATH
 
-#ifndef VALIDATION_LOSS_PATH
-#   define VALIDATION_LOSS_PATH "./data/validation_loss.bin"
-#endif // VALIDATION_LOSS_PATH
-
 #ifndef INPUTS_PATH
 #   define INPUTS_PATH "./data/inputs.bin"
 #endif // INPUTS_PATH
@@ -53,12 +49,6 @@ static float Rmax = -1.0F;
 // auxiliary
 static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
-
-// file names
-static const std::string network_fname = NETWORK_PATH;
-static const std::string val_fname = VALIDATION_LOSS_PATH;
-static const std::string in_fname = INPUTS_PATH;
-static const std::string out_fname = OUTPUTS_PATH;
 
 // how many samples we have
 size_t Nsamples = 0;
@@ -109,8 +99,8 @@ int main ()
 {// {{{
     set_device();
 
-    load_vec(inputs, in_fname, in_stride);
-    load_vec(outputs, out_fname, out_stride);
+    load_vec(inputs, INPUTS_PATH, in_stride);
+    load_vec(outputs, OUTPUTS_PATH, out_stride);
     std::fprintf(stderr, "Loaded training data with Rmin=%.8e and Rmax=%.8e\n", Rmin, Rmax);
 
     #ifdef SPLIT_SAMPLES
@@ -168,7 +158,7 @@ int main ()
     save_network(net);
 
     // save validation loss
-    save_vec(validation_loss, val_fname);
+    save_vec(validation_loss, NETWORK_PATH"/validation_loss.bin");
 
     // test the network
     net->eval();
@@ -193,9 +183,11 @@ int main ()
         targ.push_back(targ_acc[ii][0]);
         pred.push_back(pred_acc[ii][0]);
     }
-    save_vec(R, "test_R.bin");
-    save_vec(targ, "test_targ.bin");
-    save_vec(pred, "test_pred.bin");
+    
+    // save test results
+    save_vec(R, NETWORK_PATH"test_R.bin");
+    save_vec(targ, NETWORK_PATH"test_targ.bin");
+    save_vec(pred, NETWORK_PATH"test_pred.bin");
 }// }}}
 
 void set_device ()
@@ -357,14 +349,14 @@ torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ)
 void save_network (std::shared_ptr<Net> net_ptr)
 {// {{{
     // make sure we have the directory
-    std::filesystem::create_directories(network_fname);   
+    std::filesystem::create_directories(NETWORK_PATH);   
 
     // serialize the network
-    torch::save(net_ptr, network_fname+"/network.pt");
+    torch::save(net_ptr, NETWORK_PATH"/network.pt");
 
     // write Rmin, Rmax to file
     {
-        auto f = std::fopen((network_fname+"/Rlims.txt").c_str(), "w");
+        auto f = std::fopen(NETWORK_PATH"/Rlims.txt", "w");
         std::fprintf(f, "Rmin = %.8e\n", Rmin);
         std::fprintf(f, "Rmax = %.8e\n", Rmax);
         std::fclose(f);
@@ -373,7 +365,7 @@ void save_network (std::shared_ptr<Net> net_ptr)
     // write key elements of the network architectue to file
     // (this is just for human readable information purposes)
     {
-        auto f = std::fopen((network_fname+"/architecture.txt").c_str(), "w");
+        auto f = std::fopen(NETWORK_PATH"/architecture.txt", "w");
         std::fprintf(f, "netw_item_size = %lu\n", Net::netw_item_size);
         std::fprintf(f, "Nhidden = %lu\n", Net::Nhidden);
         std::fprintf(f, "Nneurons = %lu\n", Net::Nneurons);

@@ -5,7 +5,6 @@ export VOXELIZE=.
 source ${VOXELIZE}/paths.sh
 
 export NETWORK_PATH=${VOXELIZE}/data/network
-export VALIDATION_LOSS_PATH=${VOXELIZE}/data/validation_loss.bin
 export INPUTS_PATH=${VOXELIZE}/data/inputs.bin
 export OUTPUTS_PATH=${VOXELIZE}/data/outputs.bin
 
@@ -17,7 +16,6 @@ g++ -std=c++17 -O3 -g3 \
     -UCPU_ONLY \
     -DSPLIT_SAMPLES \
     -DNETWORK_PATH=\"${NETWORK_PATH}\" \
-    -DVALIDATION_LOSS_PATH=\"${VALIDATION_LOSS_PATH}\" \
     -DINPUTS_PATH=\"${INPUTS_PATH}\" \
     -DOUTPUTS_PATH=\"${OUTPUTS_PATH}\" \
     -I${TORCH}/include/torch/csrc/api/include/ \
