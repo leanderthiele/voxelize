@@ -14,6 +14,14 @@
 #   error "generate_samples.cpp should only be compiled with the CPU_ONLY macro defined."
 #endif // CPU_ONLY
 
+#ifndef INPUTS_PATH
+#   define INPUTS_PATH "./data/inputs.bin"
+#endif // INPUTS_PATH
+
+#ifndef OUTPUTS_PATH
+#   define OUTPUTS_PATH "./data/outputs.bin"
+#endif // OUTPUTS_PATH
+
 static constexpr size_t Nsamples = 1 << 26;
 static constexpr float  Rmin     = 0.01;
 static constexpr float  Rmax     = 10.0;
@@ -22,8 +30,8 @@ std::vector<float> inputs;
 std::vector<float> outputs;
 
 // file names
-static const std::string in_fname = "inputs.bin";
-static const std::string out_fname = "outputs.bin";
+static const std::string in_fname = INPUTS_PATH;
+static const std::string out_fname = OUTPUTS_PATH;
 
 // draws random input, including the mod_reflections & mod_rotations
 std::pair<std::array<float,3>,float> generate_input (); 

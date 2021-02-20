@@ -10,6 +10,22 @@
 #   error "train_network.cpp should only be compiled without the CPU_ONLY macro defined."
 #endif // CPU_ONLY
 
+#ifndef NETWORK_PATH
+#   define NETWORK_PATH "./data/network.pt"
+#endif // NETWORK_PATH
+
+#ifndef VALIDATION_LOSS_PATH
+#   define VALIDATION_LOSS_PATH "./data/validation_loss.bin"
+#endif // VALIDATION_LOSS_PATH
+
+#ifndef INPUTS_PATH
+#   define INPUTS_PATH "./data/inputs.bin"
+#endif // INPUTS_PATH
+
+#ifndef OUTPUTS_PATH
+#   define OUTPUTS_PATH "./data/outputs.bin"
+#endif // OUTPUTS_PATH
+
 #include <torch/torch.h>
 
 #include "network.hpp"
@@ -38,10 +54,10 @@ static constexpr size_t in_stride = 4;
 static constexpr size_t out_stride = 1;
 
 // file names
-static const std::string network_fname = "network.pt";
-static const std::string val_fname = "validation_loss.bin";
-static const std::string in_fname = "inputs.bin";
-static const std::string out_fname = "outputs.bin";
+static const std::string network_fname = NETWORK_PATH;
+static const std::string val_fname = VALIDATION_LOSS_PATH;
+static const std::string in_fname = INPUTS_PATH;
+static const std::string out_fname = OUTPUTS_PATH;
 
 // how many samples we have
 size_t Nsamples = 0;

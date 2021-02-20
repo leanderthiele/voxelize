@@ -10,6 +10,10 @@
 #   include "voxelize_gpu.hpp"
 #endif // CPU_ONLY
 
+#ifndef NETWORK_PATH
+#   define NETWORK_PATH "./data/network.pt"
+#endif // NETWORK_PATH
+
 // 4pi/3
 #ifndef M_4PI_3f32
 #   define M_4PI_3f32 4.1887902047863909846168578443726705122628925325001410946332594564F
@@ -23,7 +27,7 @@ main ()
     // This has the advantage that the network is not copied to the GPU every time voxelize()
     // is called.
     #ifndef CPU_ONLY
-    const std::string net_fname = "./network.pt";
+    const std::string net_fname = NETWORK_PATH;
     auto gpu_ptr = new gpu_handler (net_fname);
     #endif // CPU_ONLY
 
