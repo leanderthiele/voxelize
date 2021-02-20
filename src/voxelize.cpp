@@ -66,9 +66,9 @@ voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 {// {{{
     // initialize the struct that holds all information
     globals = Globals(Nparticles, box_N, dim, box_L, coords,
-                      radii, field, box,
+                      radii, field, box
                       #ifndef CPU_ONLY
-                      gpu
+                      , gpu
                       #endif // CPU_ONLY
                       );
 
