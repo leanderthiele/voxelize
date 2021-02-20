@@ -45,11 +45,15 @@ typedef std::queue<std::shared_ptr<cpu_queue_item>>          cpu_queue_t;
 // Working along the queue means assembling gpu_batch_queue_items
 typedef std::queue<std::shared_ptr<gpu_queue_item>>          gpu_queue_t;
 #endif // WORKERS_MAKE_BATCHES
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 // lives on root memory, root inserts
 // Working along the queue means constructing gpu_process_items
 typedef std::queue<std::shared_ptr<gpu_batch_queue_item>>    gpu_batch_queue_t;
+#endif // CPU_ONLY
 
+#ifndef CPU_ONLY
 // lives on root memory, root inserts
 // Working along the list means constructing cpu_queue_items
 typedef std::list<std::shared_ptr<gpu_process_item>>         gpu_process_list_t;
@@ -126,8 +130,7 @@ struct gpu_batch_queue_item
 struct cpu_queue_item
 {// {{{
     // these are for construction with trivial results in the worker threads
-    static constexpr size_t approx_size = 4000;
-    static constexpr size_t reserv_size = 4096;
+    static constexpr size_t batch_size = 1 << 15;
 
     std::vector<int64_t> box_indices;
     std::vector<float>   weights;
