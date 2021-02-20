@@ -1,0 +1,3 @@
+netw_item_size = 8
+Nhidden = 4
+Nneurons = 32
