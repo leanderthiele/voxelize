@@ -15,6 +15,7 @@
 #include "c10/cuda/CUDAStream.h"
 
 #include "gpu_handler.hpp"
+#include "network.hpp"
 #include "globals.hpp"
 
 // --- Implementation ---
