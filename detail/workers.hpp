@@ -11,6 +11,12 @@
 #   include <cstdio>
 #endif // NDEBUG
 
+#ifdef CPU_ONLY
+#   include "voxelize_cpu.hpp"
+#else // CPU_ONLY
+#   include "voxelize_gpu.hpp"
+#endif // CPU_ONLY
+
 #include "geometry.hpp"
 #include "queues.hpp"
 #include "queues_implementation.hpp"

@@ -15,6 +15,12 @@
 #   include <c10/cuda/CUDAStream.h>
 #endif // CPU_ONLY
 
+#ifdef CPU_ONLY
+#   include "voxelize_cpu.hpp"
+#else // CPU_ONLY
+#   include "voxelize_gpu.hpp"
+#endif // CPU_ONLY
+
 #include "queues.hpp"
 #include "queues_implementation.hpp"
 #include "globals.hpp"

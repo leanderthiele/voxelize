@@ -6,9 +6,16 @@
 #include <string>
 #include <omp.h>
 
+#ifdef CPU_ONLY
+#   include "voxelize_cpu.hpp"
+#else // CPU_ONLY
+#   include "voxelize_gpu.hpp"
+#endif // CPU_ONLY
+
 #include "queues.hpp"
+
 #ifndef CPU_ONLY
-#include "gpu_handler.hpp"
+#   include "gpu_handler.hpp"
 #endif // CPU_ONLY
 
 using namespace Voxelize;

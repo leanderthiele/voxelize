@@ -14,6 +14,7 @@
 
 #include "c10/cuda/CUDAStream.h"
 
+#include "voxelize_gpu.hpp"
 #include "gpu_handler.hpp"
 #include "network.hpp"
 #include "globals.hpp"
