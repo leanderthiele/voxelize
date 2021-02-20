@@ -61,13 +61,10 @@
 //  --- currently : does not block anymore, so better to leave in for safety
 #define CHECK_FOR_MEM
 
-// will wrap the tensor copy and forward into a try-catch block,
-// which is attempting to catch memory problems.
-// The problem here is that the program can freeze instead of
-// doing a meaningful about
-//  --- currently : not sure!
-#define TRY_COMPUTE
-
-#define PRELU
+// use learnable slopes in the leaky relu elements of the network.
+// The motivation was to have a bit more complexity while keeping runtime
+// approximately the same compared to having leaky relus with fixed slopes.
+//  --- currently : does not seem to make any difference
+// #define PRELU
 
 #endif // DEFINES_HPP

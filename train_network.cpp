@@ -45,6 +45,9 @@ static const std::string out_fname = "outputs.bin";
 
 // how many samples we have
 size_t Nsamples = 0;
+size_t sample_offsets[4]; // for the 3 batch types, plus one end
+size_t sample_lengths[3]; // for the 3 batch types
+
 auto inputs = std::vector<float>();
 auto outputs = std::vector<float>();
 auto validation_loss = std::vector<float>();
@@ -58,8 +61,15 @@ void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 // saves a vector to binary file
 void save_vec (const std::vector<float> &vec, const std::string &fname);
 
+// establishes the split into training, validation, and testing data
+// (fills sample_offsets, sample_lengths)
+void split_samples ();
+
+// be careful : they need to be in this order!
+enum class BatchType { training, validation, testing };
+
 // gives a new sample, first is the input and second the target
-std::pair<torch::Tensor, torch::Tensor> draw_batch ();
+std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b);
 
 // computes the loss function
 torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ);
@@ -71,6 +81,8 @@ int main ()
     load_vec(inputs, in_fname, in_stride);
     load_vec(outputs, out_fname, out_stride);
     std::fprintf(stderr, "Loaded training data with Rmin=%.8e and Rmax=%.8e\n", Rmin, Rmax);
+
+    split_samples();
 
     auto net = std::make_shared<Net>();
     if (gpu_avail)
@@ -85,7 +97,7 @@ int main ()
         for (size_t batch_idx=0; batch_idx != Nbatches_epoch; ++batch_idx)
         {
             optimizer.zero_grad();
-            auto batch = draw_batch();
+            auto batch = draw_batch(BatchType::training);
             auto pred = net->forward(batch.first);
             auto loss = loss_fct(batch.second, pred);
             loss.backward();
@@ -94,7 +106,7 @@ int main ()
 
         // validate
         net->eval();
-        auto val_batch = draw_batch();
+        auto val_batch = draw_batch(BatchType::validation);
         auto val_pred = net->forward(val_batch.first);
         auto loss = loss_fct(val_batch.second, val_pred);
         validation_loss.push_back(loss.item<float>());
@@ -128,7 +140,7 @@ int main ()
 
     // test the network
     net->eval();
-    auto test_batch = draw_batch();
+    auto test_batch = draw_batch(BatchType::testing);
     auto in_tens = test_batch.first.to(torch::kCPU);
     auto targ_tens = test_batch.second.to(torch::kCPU);
     auto in_acc = in_tens.accessor<float,2>();
@@ -205,9 +217,31 @@ void save_vec (const std::vector<float> &vec, const std::string &fname)
     std::fclose(f);
 }// }}}
 
-std::pair<torch::Tensor, torch::Tensor> draw_batch ()
+void split_samples ()
 {// {{{
-    static size_t current_idx = 0;
+    // fill the end indicator
+    sample_offsets[3] = Nsamples;
+
+    // we need only a single testing batch
+    sample_offsets[(size_t)BatchType::testing] = Nsamples - batchsize;
+
+    // then we want some validation data
+    sample_offsets[(size_t)BatchType::validation] = Nsamples - 0.2*Nsamples;
+
+    // the rest is for training
+    sample_offsets[(size_t)BatchType::training] = 0;
+
+    // now fill the lengths
+    for (size_t ii=0; ii != 3; ++ii)
+    {
+        sample_lengths[ii] = sample_offsets[ii+1] - sample_offsets[ii];
+        assert(sample_lengths[ii] <= Nsamples);
+    }
+}// }}}
+
+std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b)
+{// {{{
+    static size_t current_idx[] = { 0, 0, 0 };
 
     static auto opt = torch::TensorOptions()
                         .dtype(torch::kFloat32)
@@ -215,20 +249,23 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch ()
                         .device(torch::DeviceType::CPU)
                         .pinned_memory(gpu_avail);
 
+    size_t bidx = (size_t)b;
+
     torch::Tensor in = torch::empty({batchsize, Net::netw_item_size}, opt);
     torch::Tensor out = torch::empty({batchsize, 1}, opt);
 
     auto in_acc = in.accessor<float,2>();
     auto out_acc = out.accessor<float,2>();
 
-    for (size_t ii=0; ii != batchsize; ++ii, current_idx=(current_idx+1)%Nsamples)
+    for (size_t ii=0; ii != batchsize;
+               ++ii, current_idx[bidx]=(current_idx[bidx]+1)%sample_lengths[bidx])
     {
-        const float *in_data = inputs.data() + current_idx*in_stride;
+        const float *in_data = inputs.data() + sample_offsets[bidx] + current_idx[bidx]*in_stride;
         // Note : the input that we get from file has the rotations already modded out,
         //        so we don't have to do this here (this saves a bit of runtime)
         Net::input_normalization(in_data, in_acc[ii], /*do_rotations=*/false);
 
-        out_acc[ii][0] = outputs[current_idx];
+        out_acc[ii][0] = outputs[current_idx[bidx]];
     }
 
     if (gpu_avail)
