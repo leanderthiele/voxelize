@@ -11,6 +11,8 @@
 #include "gpu_handler.hpp"
 #endif // CPU_ONLY
 
+using namespace Voxelize;
+
 struct Globals
 {
     #ifndef CPU_ONLY
@@ -63,7 +65,7 @@ struct Globals
              , gpu_handler * gpu_
              #endif // CPU_ONLY
              );
-} globals;
+};
 
 // --- Implementation ---
 

@@ -20,6 +20,10 @@
 #   include "gpu_handler.hpp"
 #endif // CPU_ONLY
 
+using namespace Voxelize;
+
+extern Globals globals;
+
 // --- Implementation ---
 
 // simple Macro to choose a templated version of a (void) function (based on globals.dim)

@@ -28,6 +28,8 @@
 #   include <chrono>
 #endif // TESTS
 
+using namespace Voxelize;
+
 // TODO
 //
 // 1) store Rmin, Rmax in network file name and retrieve it in GPU Handler.
@@ -53,6 +55,8 @@
 //
 // 6) replace HYPOT calls
 //    DONE
+
+Globals globals;
 
 void
 voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,

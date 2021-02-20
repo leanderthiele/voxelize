@@ -26,6 +26,8 @@
 #   include "gpu_handler.hpp"
 #endif // CPU_ONLY
 
+using namespace Voxelize;
+
 // The different queues (items forward declared, implementation later in this file)
 struct cpu_queue_item;
 

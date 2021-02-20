@@ -18,6 +18,8 @@
 #include "network.hpp"
 #include "globals.hpp"
 
+using namespace Voxelize;
+
 // a wrapper around a CUDA Stream that captures
 // whether the stream can be used for computations
 // or whether it is currently busy
