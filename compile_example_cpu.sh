@@ -8,7 +8,7 @@ g++ -std=c++17 -O3 -g3 \
     -DCPU_ONLY \
     -I${VOXELIZE}/include \
     -o example_cpu ${VOXELIZE}/src/example.cpp \
-    -L${VOXELIZE}/build \
+    -L${VOXELIZE}/lib \
     -lhdf5 -lhdf5_cpp \
     -lvoxelize_cpu \
     -fopenmp

@@ -20,7 +20,7 @@ g++ -std=c++17 -O3 -g3 \
     -L${TORCH}/lib \
     -L${CUDA}/lib64 \
     -L${CUDNN}/lib64 \
-    -L${VOXELIZE}/build \
+    -L${VOXELIZE}/lib \
     -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart \
     -lhdf5 -lhdf5_cpp \
     -lvoxelize_gpu \

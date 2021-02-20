@@ -2,7 +2,8 @@
 
 export VOXELIZE=.
 
-mkdir -p build
+mkdir -p ${VOXELIZE}/build
+mkdir -p ${VOXELIZE}/lib
 
 g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
@@ -14,4 +15,4 @@ g++ -std=c++17 -O3 -g3 \
     -o ${VOXELIZE}/build/voxelize_cpu.o ${VOXELIZE}/src/voxelize.cpp \
     -fopenmp
 
-ar rcs ${VOXELIZE}/build/libvoxelize_cpu.a ${VOXELIZE}/build/voxelize_cpu.o
+ar rcs ${VOXELIZE}/lib/libvoxelize_cpu.a ${VOXELIZE}/build/voxelize_cpu.o

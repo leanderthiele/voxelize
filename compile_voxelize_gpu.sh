@@ -4,6 +4,7 @@ export VOXELIZE=.
 source ${VOXELIZE}/paths.sh
 
 mkdir -p ${VOXELIZE}/build
+mkdir -p ${VOXELIZE}/lib
 
 g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
@@ -23,4 +24,4 @@ g++ -std=c++17 -O3 -g3 \
     -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart \
     -fopenmp
 
-ar rcs ${VOXELIZE}/build/libvoxelize_gpu.a ${VOXELIZE}/build/voxelize_gpu.o
+ar rcs ${VOXELIZE}/lib/libvoxelize_gpu.a ${VOXELIZE}/build/voxelize_gpu.o
