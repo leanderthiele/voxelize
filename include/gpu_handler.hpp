@@ -18,8 +18,6 @@
 #include <c10/core/Device.h>
 #include <c10/cuda/CUDAStream.h>
 
-#include "network.hpp"
-
 // a wrapper around a CUDA Stream that captures
 // whether the stream can be used for computations
 // or whether it is currently busy
@@ -62,6 +60,10 @@ public :
     }
     #endif // RANDOM_STREAM
 };// }}}
+
+// forward declare Net here so that someone including
+// this header file doesn't see the Net definition
+struct Net;
 
 class gpu_handler
 {// {{{
