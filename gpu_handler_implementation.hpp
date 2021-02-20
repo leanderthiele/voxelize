@@ -219,7 +219,6 @@ gpu_handler::get_resource (size_t nbytes,
             #ifndef RANDOM_STREAM
                 // block the stream from access -- we do this within a critical region
                 // to make sure we don't have any race condition here
-                // FIXME assertion in set_busy fails!!
                 if (device_idx != device_default && stream_idx != stream_default)
                     streams[device_idx][stream_idx]->set_busy(true);
             #endif // RANDOM_STREAM

@@ -306,7 +306,6 @@ gpu_process_item::release_resources () const
 inline bool
 gpu_process_item::is_done () const
 {// {{{
-    // TODO not sure about this!
     return finished_event.isCreated() && finished_event.query();
 }// }}}
 #endif // CPU_ONLY
