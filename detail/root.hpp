@@ -33,8 +33,6 @@
 
 using namespace Voxelize;
 
-extern Globals globals;
-
 #ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
 static inline void

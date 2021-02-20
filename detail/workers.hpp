@@ -25,8 +25,6 @@
 
 using namespace Voxelize;
 
-extern Globals globals;
-
 // two smaller helper functions (unfortunately we don't seem to be able to template
 // them, because I don't know how to pass the names of the critical sections)
 

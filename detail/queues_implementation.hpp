@@ -19,17 +19,15 @@
 
 #include "geometry.hpp"
 #include "queues.hpp"
+#include "globals.hpp"
 
 #ifndef CPU_ONLY
-#   include "globals.hpp"
 #   include "network.hpp"
 #   include "gpu_handler.hpp"
 #   include "gpu_handler_implementation.hpp"
 #endif // CPU_ONLY
 
 using namespace Voxelize;
-
-extern Globals globals;
 
 // --- Implementation ---
 

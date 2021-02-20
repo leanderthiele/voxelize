@@ -60,9 +60,9 @@
 // 6) replace HYPOT calls
 //    DONE
 
-namespace Voxelize {
-
 Globals globals;
+
+namespace Voxelize {
 
 void
 voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,

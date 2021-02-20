@@ -20,8 +20,11 @@
 
 using namespace Voxelize;
 
+struct Globals;
+extern Globals globals;
+
 struct Globals
-{
+{// {{{
     #ifndef CPU_ONLY
     // gpu handling class
     gpu_handler * gpu;
@@ -72,7 +75,7 @@ struct Globals
              , gpu_handler * gpu_
              #endif // CPU_ONLY
              );
-};
+};// }}}
 
 // --- Implementation ---
 
