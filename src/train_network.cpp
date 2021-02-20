@@ -61,8 +61,11 @@ static const std::string out_fname = OUTPUTS_PATH;
 
 // how many samples we have
 size_t Nsamples = 0;
+
+#ifdef SPLIT_SAMPLES
 size_t sample_offsets[4]; // for the 3 batch types, plus one end
 size_t sample_lengths[3]; // for the 3 batch types
+#endif // SPLIT_SAMPLES
 
 auto inputs = std::vector<float>();
 auto outputs = std::vector<float>();
@@ -77,15 +80,23 @@ void load_vec (std::vector<float> &vec, const std::string &fname, size_t stride)
 // saves a vector to binary file
 void save_vec (const std::vector<float> &vec, const std::string &fname);
 
+#ifdef SPLIT_SAMPLES
 // establishes the split into training, validation, and testing data
 // (fills sample_offsets, sample_lengths)
 void split_samples ();
+#endif // SPLIT_SAMPLES
 
+#ifdef SPLIT_SAMPLES
 // be careful : they need to be in this order!
 enum class BatchType { training, validation, testing };
+#endif // SPLIT_SAMPLES
 
 // gives a new sample, first is the input and second the target
-std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b);
+std::pair<torch::Tensor, torch::Tensor> draw_batch ( 
+                                                    #ifdef SPLIT_SAMPLES
+                                                    BatchType b
+                                                    #endif // SPLIT_SAMPLES
+                                                   );
 
 // computes the loss function
 torch::Tensor loss_fct (torch::Tensor &pred, torch::Tensor &targ);
@@ -98,7 +109,9 @@ int main ()
     load_vec(outputs, out_fname, out_stride);
     std::fprintf(stderr, "Loaded training data with Rmin=%.8e and Rmax=%.8e\n", Rmin, Rmax);
 
+    #ifdef SPLIT_SAMPLES
     split_samples();
+    #endif // SPLIT_SAMPLES
 
     auto net = std::make_shared<Net>();
     if (gpu_avail)
@@ -113,7 +126,11 @@ int main ()
         for (size_t batch_idx=0; batch_idx != Nbatches_epoch; ++batch_idx)
         {
             optimizer.zero_grad();
-            auto batch = draw_batch(BatchType::training);
+            auto batch = draw_batch(
+                                    #ifdef SPLIT_SAMPLES
+                                    BatchType::training
+                                    #endif // SPLIT_SAMPLES
+                                   );
             auto pred = net->forward(batch.first);
             auto loss = loss_fct(batch.second, pred);
             loss.backward();
@@ -122,7 +139,11 @@ int main ()
 
         // validate
         net->eval();
-        auto val_batch = draw_batch(BatchType::validation);
+        auto val_batch = draw_batch(
+                                    #ifdef SPLIT_SAMPLES
+                                    BatchType::validation
+                                    #endif // SPLIT_SAMPLES
+                                   );
         auto val_pred = net->forward(val_batch.first);
         auto loss = loss_fct(val_batch.second, val_pred);
         validation_loss.push_back(loss.item<float>());
@@ -156,7 +177,11 @@ int main ()
 
     // test the network
     net->eval();
-    auto test_batch = draw_batch(BatchType::testing);
+    auto test_batch = draw_batch(
+                                 #ifdef SPLIT_SAMPLES
+                                 BatchType::testing
+                                 #endif // SPLIT_SAMPLES
+                                );
     auto in_tens = test_batch.first.to(torch::kCPU);
     auto targ_tens = test_batch.second.to(torch::kCPU);
     auto in_acc = in_tens.accessor<float,2>();
@@ -233,6 +258,7 @@ void save_vec (const std::vector<float> &vec, const std::string &fname)
     std::fclose(f);
 }// }}}
 
+#ifdef SPLIT_SAMPLES
 void split_samples ()
 {// {{{
     // fill the end indicator
@@ -254,10 +280,19 @@ void split_samples ()
         assert(sample_lengths[ii] <= Nsamples);
     }
 }// }}}
+#endif // SPLIT_SAMPLES
 
-std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b)
+std::pair<torch::Tensor, torch::Tensor> draw_batch (
+                                                    #ifdef SPLIT_SAMPLES
+                                                    BatchType b
+                                                    #endif // SPLIT_SAMPLES
+                                                   )
 {// {{{
+    #ifdef SPLIT_SAMPLES
     static size_t current_idx[] = { 0, 0, 0 };
+    #else // SPLIT_SAMPLES
+    static size_t current_idx = 0;
+    #endif // SPLIT_SAMPLES
 
     static auto opt = torch::TensorOptions()
                         .dtype(torch::kFloat32)
@@ -265,7 +300,9 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b)
                         .device(torch::DeviceType::CPU)
                         .pinned_memory(gpu_avail);
 
+    #ifdef SPLIT_SAMPLES
     size_t bidx = (size_t)b;
+    #endif // SPLIT_SAMPLES
 
     torch::Tensor in = torch::empty({batchsize, Net::netw_item_size}, opt);
     torch::Tensor out = torch::empty({batchsize, 1}, opt);
@@ -273,15 +310,30 @@ std::pair<torch::Tensor, torch::Tensor> draw_batch (BatchType b)
     auto in_acc = in.accessor<float,2>();
     auto out_acc = out.accessor<float,2>();
 
-    for (size_t ii=0; ii != batchsize;
-               ++ii, current_idx[bidx]=(current_idx[bidx]+1)%sample_lengths[bidx])
+    for (size_t ii=0; ii != batchsize; ++ii,
+         #ifndef SPLIT_SAMPLES
+         current_idx = (current_idx+1) % Nsamples
+         #else // SPLIT_SAMPLES
+         current_idx[bidx] = (current_idx[bidx]+1) % sample_lengths[bidx]
+         #endif // SPLIT_SAMPLES
+        )
     {
-        const float *in_data = inputs.data() + (sample_offsets[bidx] + current_idx[bidx])*in_stride;
+        const float *in_data = inputs.data()
+            #ifndef SPLIT_SAMPLES 
+            + current_idx * in_stride;
+            #else // SPLIT_SAMPLES
+            + (sample_offsets[bidx] + current_idx[bidx])*in_stride;
+            #endif // SPLIT_SAMPLES
+
         // Note : the input that we get from file has the rotations already modded out,
         //        so we don't have to do this here (this saves a bit of runtime)
         Net::input_normalization(in_data, in_acc[ii], /*do_rotations=*/false);
 
+        #ifndef SPLIT_SAMPLES
+        out_acc[ii][0] = outputs[current_idx];
+        #else // SPLIT_SAMPLES
         out_acc[ii][0] = outputs[current_idx[bidx]];
+        #endif // SPLIT_SAMPLES
     }
 
     if (gpu_avail)
