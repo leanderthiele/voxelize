@@ -4,7 +4,7 @@ export VOXELIZE=.
 
 source ${VOXELIZE}/paths.sh
 
-export NETWORK_PATH=${VOXELIZE}/data/network.pt
+export NETWORK_PATH=${VOXELIZE}/data/network
 export VALIDATION_LOSS_PATH=${VOXELIZE}/data/validation_loss.bin
 export INPUTS_PATH=${VOXELIZE}/data/inputs.bin
 export OUTPUTS_PATH=${VOXELIZE}/data/outputs.bin

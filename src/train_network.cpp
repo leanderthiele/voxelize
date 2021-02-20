@@ -12,7 +12,7 @@
 #endif // CPU_ONLY
 
 #ifndef NETWORK_PATH
-#   define NETWORK_PATH "./data/network.pt"
+#   define NETWORK_PATH "./data/network"
 #endif // NETWORK_PATH
 
 #ifndef VALIDATION_LOSS_PATH

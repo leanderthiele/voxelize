@@ -4,7 +4,7 @@ export VOXELIZE=.
 
 source ${VOXELIZE}/paths.sh
 
-export NETWORK_PATH=./data/network.pt
+export NETWORK_PATH=./data/network
 
 g++ -std=c++17 -O3 -g3 \
     -Wall -Wextra -Wunused-result -Wno-unused-parameter \
