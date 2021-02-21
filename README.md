@@ -1,18 +1,17 @@
 # Voxelize
 
-[Introduction](#intro)
-[The two flavours of the code](#flavours)
-[Performance and how to tune it](#performance)
-[Accuracy](#accuracy)
-[Dependencies](#dependencies)
-[Building PyTorch](#pytorch)
-[Build](#build)
+* [Introduction](#intro)
+* [The two flavours of the code](#flavours)
+* [Performance and how to tune it](#performance)
+* [Accuracy](#accuracy)
+* [Dependencies](#dependencies)
+* [Building PyTorch](#pytorch)
+* [Build](#build)
 
 
 Author: [Leander Thiele](mailto:lthiele@princeton.edu) with encouragement from Francisco Villaescusa-Navarro
 
-<a name="intro"/>
-## Introduction
+## Introduction <a name="intro"/>
 
 *Voxelize* converts a list of simulation particles which have a field associated with them
 into a cubic lattice of voxels.
