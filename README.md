@@ -12,12 +12,12 @@ of the code; do get in touch if that is would you need.
 
 Mathematically, *Voxelize* computes the field value associated with voxel *i* as
 
-f<sub>i = &Sigma<sub>&alpha; f<sub>&alpha; V<sub>(i,&alpha;) V<sub>voxel<sup>(-1),
+f<sub>i</sub> = &Sigma<sub>&alpha;</sub> f<sub>&alpha;</sub> V<sub>i,&alpha;</sub> V<sub>voxel</sub><sup>-1</sup>,
 
-where &alpha; indexes the simulation particles, f<sub>&alpha; is the field associated with them,
-V<sub>(i,&alpha;) is the overlap volume between voxel *i* and a sphere of radius r<sub>&alpha;
-centered at particle &alpha;'s position, and V<sub>voxel is the volume of a voxel.
-Note that with this definition, intensive fields f<sub>&alpha; are mapped to intensive fields f<sub>i,
+where &alpha; indexes the simulation particles, f<sub>&alpha;</sub> is the field associated with them,
+V<sub>i,&alpha;</sub> is the overlap volume between voxel *i* and a sphere of radius r<sub>&alpha;</sub>
+centered at particle &alpha;'s position, and V<sub>voxel</sub> is the volume of a voxel.
+Note that with this definition, intensive fields f<sub>&alpha;</sub> are mapped to intensive fields f<sub>i</sub>,
 for example if the input field associated with the particles is the local density,
 the output field will be a local density too (and not a mass).
 
