@@ -1,3 +1,5 @@
+Author: [Leander Thiele](mailto:lthiele@princeton.edu) with help from Francisco Villaescusa-Navarro
+
 # Introduction
 
 *Voxelize* converts a list of simulation particles which have a field associated with them
@@ -104,14 +106,103 @@ A histogram of the relative difference between the two results is shown here:
 ![](data/network/network_accuracy.png)
 
 We see that the CPU+GPU version achieves sub-percent accuracy for the vast majority of voxels,
-with most of them off be only a few permille.
+with most of them off by only a few permille.
 
 
 # Dependencies
 
+Both flavours of the code (CPU-only and CPU+GPU) require the
+[Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) header files.
+We experienced some problems with the, as of writing, most recent version 3.3.9,
+we recommend you use v3.3.8 instead.
 
-# Before you build the GPU version
+In order to compile `src/example.cpp`, hdf5 (with C++ bindings) is required.
 
+For the CPU+GPU version,
+* PyTorch (with C++ bindings),
+* CUDA (the code is tested with v11.0, but older version should work too),
+* CUDNN (optional, depending on how PyTorch was built)
+
+are required.
+We found it impossible to link with the pre-built PyTorch binaries that can be found
+[here](https://pytorch.org/get-started/locally) (presumably because they used an ancient
+GCC version).
+If you are facing the same problem, the next section provides some guidance on how to build
+PyTorch from source.
+
+
+# Building PyTorch
+
+We found that it was necessary to build PyTorch from source.
+This is a bit annoying, but on the plus side you will get a high-quality build
+of PyTorch that will most likely be faster than the `many-linux` pre-built binaries.
+Here are some instructions (replace `export` with the appropriate command for your shell
+if necessary):
+1. ```shell
+   git clone https://github.com/pytorch/pytorch.git
+   ```
+   We found that the, as of writing, most recent release-version 1.7.0 has bugs
+   related to the FBGEMM part. You may be able to compile that version by setting
+   `export USE_FBGEMM=0`, but we recommend building from the main branch.
+2. Load a C++ compiler and a CUDA compiler into your `PATH`.
+   On Princeton's Tiger machine, that simply means
+   ```shell
+   module load rh/devtoolset/8 # I think there was an issue with v9 of GCC
+   module load cudatoolkit/11.0
+   ```
+   for `gcc` and `nvcc`.
+3. Load some other libraries if necessary, e.g. on Tiger
+   ```shell
+   module load cudnn/cuda-11.0/8.0.2
+   module load fftw/gcc/3.3.4
+   ```
+4. Set up a build and install path (they can be identical but we recommend to have them separate)
+   ```shell
+   mkdir pytorch-build
+   mkdir pytorch-install
+   cd pytorch-build
+   ```
+5. Export some environment variables to tell CMake where to find CUDNN,
+   e.g. on Tiger
+   ```shell
+   export CUDNN_INCLUDE_DIR=/usr/local/cudnn/cuda-11.0/8.0.2/include
+   export CUDNN_INCLUDE_PATH=/usr/local/cudnn/cuda-11.0/8.0.2/include
+   export CUDNN_LIBRARY=/usr/local/cudnn/cuda-11.0/8.0.2/lib64
+   export CUDNN_LIBRARY_PATH=/usr/local/cudnn/cuda-11.0/8.0.2/lib64
+   ```
+   (somehow these are really counterintuitively named and I don't remember which
+   ones exactly are important)
+6. Load a recent version of CMake, e.g. on Tiger
+   ```shell
+   module load cmake/3.x
+   ```
+7. Set some other environment variables
+   ```shell
+   export CMAKE_INSTALL_PREFIX=../pytorch-install
+   export CMAKE_BUILD_TYPE=Release
+   export BUILD_SHARED_LIBS=1
+   export USE_CUDNN=1
+   export _GLIBCXX_USE_CXX11_ABI=1
+   export GLIBCXX_USE_CXX11_ABI=1
+   ```
+   Again, only one of the last two is actually important, I forgot which one.
+8. Run CMake:
+   ```shell
+   cmake ../pytorch
+   ```
+9. Open the generated file `CMakeCache.txt`. In particular, search for
+   * `CUDNN`
+   * `CUDA`
+   * `GLIBCXX_USE_CXX11_ABI`
+   and check that everything looks reasonable.
+   If it doesn't, try to play with the environment variables.
+10. Finally, build PyTorch:
+    ```shell
+    cmake --build . --target install
+    ```
+    This will take a long time (I think it was like 12 hours on Tiger),
+    so maybe do this in a `screen` session so you don't have to keep
+    the SSH connection to the remote stable.
 
 
 # Build
