@@ -1,4 +1,4 @@
-Author: [Leander Thiele](mailto:lthiele@princeton.edu) with help from Francisco Villaescusa-Navarro
+Author: [Leander Thiele](mailto:lthiele@princeton.edu) with encouragement from Francisco Villaescusa-Navarro
 
 # Introduction
 
@@ -40,7 +40,7 @@ void voxelize (uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
 Here, `box` is an output buffer that can fit at least `box_N`<sup>3</sup> floats,
 `dim` is the dimensionality of the field that is to be gridded, and `coords`
 (and `field`, if `dim`>1) are in row-major (C) order.
-The code *adds* to `float * box`, without zeroing first. This has the advantage that
+The code *adds* to the `box`, without zeroing first. This has the advantage that
 you can repeatedly pass the same `box` for different simulation chunks.
 Note that all the `float *` inputs will be modified by the code.
 
@@ -65,7 +65,7 @@ Since this is a somewhat time-consuming process, the code is written in such a w
 only need to do this once and can then call the `voxelize` function repeatedly with a
 pointer to the same `gpu_handler` instance.
 
-We provide a complete example of how to use the code (in both versions) in `src/example.cpp`.
+We provide a complete example of how to use the code (in both versions) in src/example.cpp.
 
 
 # Performance and how to tune it
@@ -192,10 +192,11 @@ if necessary):
    ```shell
    cmake ../pytorch > log.txt
    ```
-9. Open the generated files `log.txt` and `CMakeCache.txt`. In particular, search for
+9. Inspect the generated files `log.txt` and `CMakeCache.txt`. In particular, search for
    * `CUDNN`
    * `CUDA`
    * `GLIBCXX_USE_CXX11_ABI`
+
    and check that everything looks reasonable.
    Other things to look out for are, for example, that the MKL path was identified correctly,
    the correct GCC and NVCC versions were found, etc.
