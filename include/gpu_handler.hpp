@@ -43,9 +43,9 @@ class gpu_handler
     float Rmin, Rmax;
 public :
 
-    gpu_handler () = default;
+    gpu_handler () = delete;
 
-    gpu_handler (const std::string &network_file);
+    gpu_handler (const std::string &network_dir);
 
     float get_Rmin ();
     float get_Rmax ();
