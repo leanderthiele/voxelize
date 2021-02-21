@@ -88,16 +88,20 @@ EXAMPLE_GPU_DEP:= $(SRC)/example.cpp \
 .PHONY: build lib data
 .PHONY: voxelize_cpu voxelize_gpu
 
-voxelize_cpu: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
+voxelize_cpu: $(LIB)/libvoxelize_cpu.a
+
+voxelize_gpu: $(LIB)/libvoxelize_gpu.a
+
+$(LIB)/libvoxelize_cpu.a: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_cpu.a $(BUILD)/voxelize_cpu.o
 
-voxelize_gpu: lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
+$(LIB)/libvoxelize_gpu.a: lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_gpu.a $(BUILD)/voxelize_gpu.o
 
-example_cpu: $(BUILD)/example_cpu.o $(EXAMPLE_CPU_DEP)
+example_cpu: $(LIB)/libvoxelize_cpu.a $(BUILD)/example_cpu.o $(EXAMPLE_CPU_DEP)
 	$(CC) -o example_cpu $(BUILD)/example_cpu.o $(CPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_cpu
 
-example_gpu: $(BUILD)/example_gpu.o $(EXAMPLE_GPU_DEP)
+example_gpu: $(LIB)/libvoxelize_gpu.a $(BUILD)/example_gpu.o $(EXAMPLE_GPU_DEP)
 	$(CC) -o example_gpu $(BUILD)/example_gpu.o $(GPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_gpu
 
 generate_samples: data $(BUILD)/generate_samples.o $(SAMPLES_DEP)
