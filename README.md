@@ -100,7 +100,7 @@ Since the CPU+GPU version uses an interpolator, the results will differ from the
 which the CPU-only version performs.
 Using the script `src/example.cpp`, we compared the outputs of the two algorithms.
 A histogram of the relative difference between the two results is shown here:
-![](data/networks/network\_accuracy.png)
+![](data/networks/network_accuracy.png)
 We see that the CPU+GPU version achieves sub-percent accuracy for the vast majority of voxels,
 with most of them off be only a few permille.
 
