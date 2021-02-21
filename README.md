@@ -31,8 +31,8 @@ the output field will be a local density too (and not a mass).
 
 The CPU-only version computes the overlap volumes analytically, using a header file provided
 by Strobl et al. 2016 (https://github.com/severinstrobl/overlap).
-In order to use the CPU-only version, link with `lib/libvoxelize_cpu.a`
-and include the header `include/voxelize_cpu.hpp`, which declares the function
+In order to use the CPU-only version, link with lib/libvoxelize\_cpu.a
+and include the header [include/voxelize\_cpu.hpp](include/voxelize_cpu.hpp), which declares the function
 ```C
 void voxelize (uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
                float * coords, float * radii, float * field, float * box);
@@ -47,13 +47,13 @@ Note that all the `float *` inputs will be modified by the code.
 The CPU+GPU version achieves higher performance than the CPU-only version by using a neural network
 to interpolate the exact overlap volumes (in principle, the network could also be evaluated on a CPU,
 but the performance gain over the exact calculation is small in that case).
-In order to use the CPU+GPU version, link with `lib/libvoxelize_gpu.a`
-and include the header `include/voxelize_gpu.hpp`, which declares the function
+In order to use the CPU+GPU version, link with lib/libvoxelize\_gpu.a
+and include the header [include/voxelize\_gpu.hpp](include/voxelize_gpu.hpp), which declares the function
 ```C
 void voxelize (..., gpu_handler * gpu);
 ```
 Here, the ellipses stand for the same arguments as in the CPU-only version,
-and `gpu_handler` is a class defined in `include/gpu_handler.hpp`.
+and `gpu_handler` is a class defined in [include/gpu\_handler.hpp](include/gpu_handler.hpp).
 The only constructor of this class is declared as
 ```C
 gpu_handler::gpu_handler (const std::string &network_dir);
@@ -70,7 +70,7 @@ We provide a complete example of how to use the code (in both versions) in [src/
 
 # Performance and how to tune it
 
-For our tests, we used the script `src/example.cpp`. This program loads the gas particles
+For our tests, we used the script [src/example.cpp'](src/example.cpp) This program loads the gas particles
 from an Illustris-type simulation and constructs the gas density field.
 The simulation has 256<sup>3</sup> gas particles in a 25 Mpc/*h* box, which we assign
 to a 256<sup>3</sup> lattice.
@@ -89,7 +89,7 @@ become relevant with a large number of threads).
 We found that the CPU+GPU version performs best with 1 GPU and of the order 8-12 CPU-threads.
 Although the code supports multiple GPUs in principle, we found that not much performance could
 be gained by running on more than one GPU.
-A point that may require tuning is the batch size, which you can find in the `include/defines.hpp`.
+A point that may require tuning is the batch size, which you can find in the [include/defines.hpp](include/defines.hpp).
 In our tests on a GPU with 16GB memory we found 2<sup>17</sup> to be a good choice.
 The user may want to adjust this number proportionally to the memory their GPUs have.
 If the number of CPU-threads as well as the batch size are chosen well, utilization metrics
@@ -100,7 +100,7 @@ shown by e.g. `nvidia-smi` or `gpustat` will exceed 90% during most of the code'
 
 Since the CPU+GPU version uses an interpolator, the results will differ from the analytic calculation
 which the CPU-only version performs.
-Using the script `src/example.cpp`, we compared the outputs of the two algorithms.
+Using the script [src/example.cpp](src/example.cpp), we compared the outputs of the two algorithms.
 A histogram of the relative difference between the two results is shown here:
 
 ![](data/network/network_accuracy.png)
@@ -116,7 +116,7 @@ Both flavours of the code (CPU-only and CPU+GPU) require the
 We experienced some problems with the, as of writing, most recent version 3.3.9,
 we recommend you use v3.3.8 instead.
 
-In order to compile `src/example.cpp`, hdf5 (with C++ bindings) is required.
+In order to compile [src/example.cpp](src/example.cpp), hdf5 (with C++ bindings) is required.
 
 For the CPU+GPU version,
 * PyTorch (with C++ bindings),
@@ -218,9 +218,9 @@ For the CPU+GPU version, at least the variables `TORCH`, `CUDA`, and `CUDNN`
 are likely required to be set.
 
 If you're building the CPU+GPU version, you may want to adjust the `BATCH_SIZE`
-macro in `include/defines.hpp` as mentioned above.
+macro in [include/defines.hpp](include/defines.hpp) as mentioned above.
 
-Define `NDEBUG` and un-define `COUNT` in `include/defines.hpp` if you don't
+Define `NDEBUG` and un-define `COUNT` in [include/defines.hpp](include/defines.hpp) if you don't
 want to see any print output during runtime.
 We recommend to keep these as they are at least until you have successfully run the code once.
 
