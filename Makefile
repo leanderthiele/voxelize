@@ -12,14 +12,18 @@ CUDNN:= /usr/local/cudnn/cuda-11.0/8.0.2
 HDF5_INCL:=
 HDF5_LINK:= -lhdf5 -lhdf5_cpp
 
-# you need to edit these if your directory structure is funny
-TORCH_INCL:= $(TORCH)/include
-CUDA_INCL:= $(CUDA)/include
-CUDNN_INCL:= $(CUDNN)/include
+# include flag for external headers (to suppress warnings there)
+# Change to I if you don't want to use gcc
+EXTERN_INCL:= isystem
 
-TORCH_LINK:= $(TORCH)/lib
-CUDA_LINK:= $(CUDA)/lib64
-CUDNN_LINK:= $(CUDNN)/lib64
+# you need to edit these if your directory structure is funny
+TORCH_INCL:= -$(EXTERN_INCL) $(TORCH)/include -$(EXTERN_INCL) $(TORCH)/include/torch/csrc/api/include/
+CUDA_INCL:= -$(EXTERN_INCL) $(CUDA)/include
+CUDNN_INCL:= -$(EXTERN_INCL) $(CUDNN)/include
+
+TORCH_LINK:= -L$(TORCH)/lib
+CUDA_LINK:= -L$(CUDA)/lib64
+CUDNN_LINK:= -L$(CUDNN)/lib64
 
 CC:= g++
 CCFLAGS:= -std=c++17 -O3 -g3 -ffast-math -Wall -Wextra -D_GLIBCXX_USE_CXX11_ABI=1
@@ -44,13 +48,13 @@ INPUTS_PATH:= $(DATA)/inputs.bin
 OUTPUTS_PATH:= $(DATA)/outputs.bin
 
 CPU_FLAG:= -DCPU_ONLY
-GPU_FLAG:= -DGPU_ONLY
+GPU_FLAG:= -UCPU_ONLY
 
-CPU_INCL:= -I$(EIGEN3)
+CPU_INCL:= -$(EXTERN_INCL) $(EIGEN3)
 CPU_LINK:=
 
-GPU_INCL:= $(CPU_INCL) -I$(TORCH_INCL) -I$(CUDA_INCL) -I$(CUDNN_INCL)
-GPU_LINK:= $(CPU_LINK) -L$(TORCH_LINK) -L$(CUDA_LINK) -L$(CUDNN_LINK) \
+GPU_INCL:= $(CPU_INCL) $(TORCH_INCL) $(CUDA_INCL) $(CUDNN_INCL)
+GPU_LINK:= $(CPU_LINK) $(TORCH_LINK) $(CUDA_LINK) $(CUDNN_LINK) \
            -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart
 
 # dependencies
@@ -87,13 +91,13 @@ EXAMPLE_GPU_DEP:= $(SRC)/example.cpp \
 voxelize_cpu: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_cpu.a $(BUILD)/voxelize_cpu.o
 
-voxelize_cpu: lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
+voxelize_gpu: lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_gpu.a $(BUILD)/voxelize_gpu.o
 
 example_cpu: $(BUILD)/example_cpu.o $(EXAMPLE_CPU_DEP)
 	$(CC) -o example_cpu $(BUILD)/example_cpu.o $(CPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_cpu
 
-example_cpu: $(BUILD)/example_gpu.o $(EXAMPLE_GPU_DEP)
+example_gpu: $(BUILD)/example_gpu.o $(EXAMPLE_GPU_DEP)
 	$(CC) -o example_gpu $(BUILD)/example_gpu.o $(GPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_gpu
 
 generate_samples: data $(BUILD)/generate_samples.o $(SAMPLES_DEP)
@@ -112,11 +116,11 @@ $(BUILD)/voxelize_gpu.o: build $(VOXELIZE_GPU_DEP)
               -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/voxelize_gpu.o $(SRC)/voxelize.cpp
 
 $(BUILD)/example_cpu.o: build $(EXAMPLE_CPU_DEP)
-	$(CC) -c $(CCFLAGS) $(CPU_FLAG) $(HDF5_INCL) \
+	$(CC) -c $(CCFLAGS) $(CPU_FLAG) $(CPU_INCL) $(HDF5_INCL) \
               -I$(INCLUDE) -o $(BUILD)/example_cpu.o $(SRC)/example.cpp
 
 $(BUILD)/example_gpu.o: build $(EXAMPLE_GPU_DEP)
-	$(CC) -c $(CCFLAGS) $(GPU_FLAG) $(HDF5_INCL) \
+	$(CC) -c $(CCFLAGS) $(GPU_FLAG) $(GPU_INCL) $(HDF5_INCL) \
               -DNETWORK_PATH=\"$(NETWORK_PATH)\" \
               -I$(INCLUDE) -o $(BUILD)/example_gpu.o $(SRC)/example.cpp
 
