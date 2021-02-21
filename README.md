@@ -133,6 +133,7 @@ PyTorch from source.
 
 # Building PyTorch
 
+**Only required if the CPU+GPU version is desired.**
 We found that it was necessary to build PyTorch from source.
 This is a bit annoying, but on the plus side you will get a high-quality build
 of PyTorch that will most likely be faster than the `many-linux` pre-built binaries.
@@ -155,6 +156,7 @@ if necessary):
    ```shell
    module load cudnn/cuda-11.0/8.0.2
    module load fftw/gcc/3.3.4
+   module load intel-mkl/2020.1/1/64
    ```
 4. Set up a build and install path (they can be identical but we recommend to have them separate)
    ```shell
@@ -188,14 +190,16 @@ if necessary):
    Again, only one of the last two is actually important, I forgot which one.
 8. Run CMake:
    ```shell
-   cmake ../pytorch
+   cmake ../pytorch > log.txt
    ```
-9. Open the generated file `CMakeCache.txt`. In particular, search for
+9. Open the generated files `log.txt` and `CMakeCache.txt`. In particular, search for
    * `CUDNN`
    * `CUDA`
    * `GLIBCXX_USE_CXX11_ABI`
    and check that everything looks reasonable.
-   If it doesn't, try to play with the environment variables.
+   Other things to look out for are, for example, that the MKL path was identified correctly,
+   the correct GCC and NVCC versions were found, etc.
+   If something doesn't seem to be right, try to play with the environment variables.
 10. Finally, build PyTorch:
     ```shell
     cmake --build . --target install
@@ -206,3 +210,30 @@ if necessary):
 
 
 # Build
+
+Edit the `Makefile`. For the CPU-only version, you'll likely only need
+to insert the correct Eigen-path.
+For the CPU+GPU version, at least the variables `TORCH`, `CUDA`, and `CUDNN`
+are likely required to be set.
+
+If you're building the CPU+GPU version, you may want to adjust the `BATCH_SIZE`
+macro in `include/defines.hpp` as mentioned above.
+
+Define `NDEBUG` and un-define `COUNT` in `include/defines.hpp` if you don't
+want to see any print output during runtime.
+We recommend to keep these as they are at least until you have successfully run the code once.
+
+Load the appropriate modules, e.g. on Tiger
+```shell
+module load rh/devtoolset/8 cudatoolkit/11.0 cudnn/cuda-11.0/8.0.2
+```
+
+Then,
+```shell
+make voxelize_cpu
+```
+for the CPU-only, and/or
+```shell
+make voxelize_gpu
+```
+for the CPU+GPU version.
