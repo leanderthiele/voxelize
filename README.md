@@ -65,7 +65,7 @@ Since this is a somewhat time-consuming process, the code is written in such a w
 only need to do this once and can then call the `voxelize` function repeatedly with a
 pointer to the same `gpu_handler` instance.
 
-We provide a complete example of how to use the code (in both versions) in [](src/example.cpp).
+We provide a complete example of how to use the code (in both versions) in [src/example.cpp](src/example.cpp).
 
 
 # Performance and how to tune it
