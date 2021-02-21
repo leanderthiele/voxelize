@@ -1,5 +1,17 @@
+# Voxelize
+
+[Introduction](#intro)
+[The two flavours of the code](#flavours)
+[Performance and how to tune it](#performance)
+[Accuracy](#accuracy)
+[Dependencies](#dependencies)
+[Building PyTorch](#pytorch)
+[Build](#build)
+
+
 Author: [Leander Thiele](mailto:lthiele@princeton.edu) with encouragement from Francisco Villaescusa-Navarro
 
+<a name="intro"/>
 ## Introduction
 
 *Voxelize* converts a list of simulation particles which have a field associated with them
@@ -23,7 +35,8 @@ Note that with this definition, intensive fields f<sub>&alpha;</sub> are mapped 
 for example if the input field associated with the particles is the local density,
 the output field will be a local density too (and not a mass).
 
-## The two versions of the code
+<a name="flavours"/>
+## The two flavours of the code
 
 *Voxelize* can be used in two flavours:
 * CPU-only;
@@ -68,6 +81,7 @@ pointer to the same `gpu_handler` instance.
 We provide a complete example of how to use the code (in both versions) in [src/example.cpp](src/example.cpp).
 
 
+<a name="performance"/>
 ## Performance and how to tune it
 
 For our tests, we used the script [src/example.cpp'](src/example.cpp) This program loads the gas particles
@@ -96,6 +110,7 @@ If the number of CPU-threads as well as the batch size are chosen well, utilizat
 shown by e.g. `nvidia-smi` or `gpustat` will exceed 90% during most of the code's runtime.
 
 
+<a name="accuracy"/>
 ## Accuracy
 
 Since the CPU+GPU version uses an interpolator, the results will differ from the analytic calculation
@@ -109,6 +124,7 @@ We see that the CPU+GPU version achieves sub-percent accuracy for the vast major
 with most of them off by only a few permille.
 
 
+<a name="dependencies"/>
 ## Dependencies
 
 Both flavours of the code (CPU-only and CPU+GPU) require the
@@ -131,6 +147,7 @@ If you are facing the same problem, the next section provides some guidance on h
 PyTorch from source.
 
 
+<a name="pytorch"/>
 ## Building PyTorch
 
 **Only required if the CPU+GPU version is desired, and linking with the pre-built binaries fails.**
@@ -210,6 +227,7 @@ if necessary):
     the SSH connection to the remote stable.
 
 
+<a name="build"/>
 ## Build
 
 Edit the `Makefile`. For the CPU-only version, you'll likely only need
