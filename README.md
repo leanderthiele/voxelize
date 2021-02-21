@@ -23,7 +23,7 @@ Note that with this definition, intensive fields f<sub>&alpha;</sub> are mapped 
 for example if the input field associated with the particles is the local density,
 the output field will be a local density too (and not a mass).
 
-# The two versions of the code
+## The two versions of the code
 
 *Voxelize* can be used in two flavours:
 * CPU-only;
@@ -68,7 +68,7 @@ pointer to the same `gpu_handler` instance.
 We provide a complete example of how to use the code (in both versions) in [src/example.cpp](src/example.cpp).
 
 
-# Performance and how to tune it
+## Performance and how to tune it
 
 For our tests, we used the script [src/example.cpp'](src/example.cpp) This program loads the gas particles
 from an Illustris-type simulation and constructs the gas density field.
@@ -96,7 +96,7 @@ If the number of CPU-threads as well as the batch size are chosen well, utilizat
 shown by e.g. `nvidia-smi` or `gpustat` will exceed 90% during most of the code's runtime.
 
 
-# Accuracy
+## Accuracy
 
 Since the CPU+GPU version uses an interpolator, the results will differ from the analytic calculation
 which the CPU-only version performs.
@@ -109,7 +109,7 @@ We see that the CPU+GPU version achieves sub-percent accuracy for the vast major
 with most of them off by only a few permille.
 
 
-# Dependencies
+## Dependencies
 
 Both flavours of the code (CPU-only and CPU+GPU) require the
 [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) header files.
@@ -131,12 +131,12 @@ If you are facing the same problem, the next section provides some guidance on h
 PyTorch from source.
 
 
-# Building PyTorch
+## Building PyTorch
 
-**Only required if the CPU+GPU version is desired.**
+**Only required if the CPU+GPU version is desired, and linking with the pre-built binaries fails.**
 We found that it was necessary to build PyTorch from source.
 This is a bit annoying, but on the plus side you will get a high-quality build
-of PyTorch that will most likely be faster than the `many-linux` pre-built binaries.
+of PyTorch that will most likely be faster than the "many-linux" pre-built binaries.
 Here are some instructions (replace `export` with the appropriate command for your shell
 if necessary):
 1. ```shell
@@ -210,7 +210,7 @@ if necessary):
     the SSH connection to the remote stable.
 
 
-# Build
+## Build
 
 Edit the `Makefile`. For the CPU-only version, you'll likely only need
 to insert the correct Eigen-path.
