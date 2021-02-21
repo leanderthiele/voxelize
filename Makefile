@@ -1,3 +1,19 @@
+# ================================================================= #
+# This Makefile can build the following targets:
+#
+# 	voxelize_cpu (generates lib/libvoxelize_cpu.a)
+# 	voxelize_gpu (generates lib/libvoxelize_gpu.a)
+#
+# 	example_cpu
+# 	example_gpu
+# 	
+# 	generate_samples (generates a script that can be used
+# 	                  to generate samples to train the network)
+# 	train_network (generates a script to train a new network)
+# 	
+# ================================================================= #
+
+
 # Things the user should need to vary
 
 EIGEN3:= /usr/include/eigen3
@@ -13,7 +29,7 @@ HDF5_INCL:=
 HDF5_LINK:= -lhdf5 -lhdf5_cpp
 
 # include flag for external headers (to suppress warnings there)
-# Change to I if you don't want to use gcc
+# Change to I (or the equivalent for your compiler) if you don't want to use gcc
 EXTERN_INCL:= isystem
 
 # you need to edit these if your directory structure is funny
@@ -51,7 +67,7 @@ CPU_FLAG:= -DCPU_ONLY
 GPU_FLAG:= -UCPU_ONLY
 
 CPU_INCL:= -$(EXTERN_INCL) $(EIGEN3)
-CPU_LINK:=
+CPU_LINK:= $(OMPFLAG)
 
 GPU_INCL:= $(CPU_INCL) $(TORCH_INCL) $(CUDA_INCL) $(CUDNN_INCL)
 GPU_LINK:= $(CPU_LINK) $(TORCH_LINK) $(CUDA_LINK) $(CUDNN_LINK) \
@@ -133,7 +149,7 @@ $(BUILD)/generate_samples.o: build $(SAMPLE_DEP)
               -DINPUTS_PATH=\"$(INPUTS_PATH)\" -DOUTPUTS_PATH=\"$(OUTPUTS_PATH)\" \
               -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/generate_samples.o $(SRC)/generate_samples.cpp
 
-$(BUILD)/tain_network.o: build $(TRAIN_DEP)
+$(BUILD)/train_network.o: build $(TRAIN_DEP)
 	$(CC) -c $(CCFLAGS) $(GPU_FLAG) $(GPU_INCL) \
               -DINPUTS_PATH=\"$(INPUTS_PATH)\" -DOUTPUTS_PATH=\"$(OUTPUTS_PATH)\" \
               -DNETWORK_PATH=\"$(NETWORK_PATH)\" \
@@ -149,5 +165,5 @@ data:
 	mkdir -p $(DATA)
 
 clean :
-	rm -r $(BUILD)
-	rm -r $(LIB)
+	rm -rf $(BUILD)
+	rm -rf $(LIB)

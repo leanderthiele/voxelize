@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <chrono>
 #include <omp.h>
 
 #ifndef CPU_ONLY
