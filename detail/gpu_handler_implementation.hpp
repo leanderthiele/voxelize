@@ -19,7 +19,7 @@
 #include "network.hpp"
 #include "globals.hpp"
 
-using namespace Voxelize;
+namespace Voxelize {
 
 // a wrapper around a CUDA Stream that captures
 // whether the stream can be used for computations
@@ -318,5 +318,7 @@ load_network (const std::string &network_file, std::shared_ptr<Net> &net_ptr, fl
         std::fclose(f);
     }
 }// }}}
+
+} // namespace Voxelize
 
 #endif // GPU_HANDLER_IMPLEMENTATION_HPP
