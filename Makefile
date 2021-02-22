@@ -104,9 +104,9 @@ EXAMPLE_GPU_DEP:= $(SRC)/example.cpp \
 .PHONY: build lib data
 .PHONY: voxelize_cpu voxelize_gpu
 
-voxelize_cpu: $(LIB)/libvoxelize_cpu.a
+voxelize_cpu: $(LIB)/libvoxelize_cpu.a lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 
-voxelize_gpu: $(LIB)/libvoxelize_gpu.a
+voxelize_gpu: $(LIB)/libvoxelize_gpu.a lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
 
 $(LIB)/libvoxelize_cpu.a: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_cpu.a $(BUILD)/voxelize_cpu.o
@@ -167,3 +167,7 @@ data:
 clean :
 	rm -rf $(BUILD)
 	rm -rf $(LIB)
+	rm -rf example_cpu
+	rm -rf example_gpu
+	rm -rf train_network
+	rm -rf generate_samples
