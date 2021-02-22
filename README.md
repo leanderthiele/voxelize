@@ -128,8 +128,9 @@ with most of them off by only a few permille.
 
 Both flavours of the code (CPU-only and CPU+GPU) require the
 [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) header files.
-We experienced some problems with the, as of writing, most recent version 3.3.9,
-we recommend you use v3.3.8 instead.
+At some point we experienced some problems with v3.3.8, so if the compiler gives you
+error messages that look like they are related to Eigen consider trying a different version.
+For Princeton people, the version in Tiger's `/usr/include/eigen3` works fine.
 
 In order to compile [src/example.cpp](src/example.cpp), hdf5 (with C++ bindings) is required.
 
