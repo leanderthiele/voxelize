@@ -24,7 +24,7 @@ as well as to generate data to be used in machine learning applications.
 *Voxelize* uses a spherical top-hat kernel for the particle assignments.
 Each particle can have an individual value for the radius of this top-hat.
 In principle, extension to other kernels should be possible with relatively little modification
-of the code; do get in touch if that is would you need.
+of the code; do get in touch if that is what you need.
 
 Mathematically, *Voxelize* computes the field value associated with voxel *i* as
 
