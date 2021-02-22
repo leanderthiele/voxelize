@@ -14,6 +14,7 @@
 
 #include "geometry.hpp"
 
+namespace Voxelize {
 
 struct Net
     #ifndef CPU_ONLY
@@ -167,5 +168,7 @@ Net::input_normalization (std::array<float,3> &cub, float R, std::vector<float> 
     for (size_t ii=0; ii != netw_item_size; ++ii)
         out.push_back(input_normalization_val(cub, R, ii));
 }// }}}
+
+} // namespace Voxelize
 
 #endif // NETWORK_HPP

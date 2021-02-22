@@ -23,7 +23,7 @@
 #include "globals.hpp"
 #include "overlap_lft_double.hpp"
 
-using namespace Voxelize;
+namespace Voxelize {
 
 // two smaller helper functions (unfortunately we don't seem to be able to template
 // them, because I don't know how to pass the names of the critical sections)
@@ -293,5 +293,7 @@ workers_process ()
     std::fprintf(stderr, "workers_process : ended.\n");
     #endif // NDEBUG
 }// }}}
+
+} // namespace Voxelize
 
 #endif // WORKERS_HPP

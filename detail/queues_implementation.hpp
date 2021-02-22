@@ -27,7 +27,7 @@
 #   include "gpu_handler_implementation.hpp"
 #endif // CPU_ONLY
 
-using namespace Voxelize;
+namespace Voxelize {
 
 // --- Implementation ---
 
@@ -345,5 +345,7 @@ gpu_process_item::compute ()
 #endif // CPU_ONLY
 
 #undef CHOOSE_TEMPL
+
+} // namespace Voxelize
 
 #endif // QUEUES_IMPLEMENTATION_HPP

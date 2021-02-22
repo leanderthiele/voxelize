@@ -32,7 +32,7 @@
 // have this before inclusion of the other header
 // files so we can have this variable with static linkage
 #include "globals.hpp"
-static Globals globals;
+static Voxelize::Globals globals;
 
 #ifdef CPU_ONLY
 #   include "voxelize_cpu.hpp"

@@ -45,6 +45,8 @@
 #define myassert(expr) \
     do { } while (0)
 
+namespace Voxelize {
+
 namespace Olap {
 
 // typedefs
@@ -2216,5 +2218,7 @@ auto overlapArea(const Sphere& sOrig, const Element& elementOrig) ->
 }
 
 } // namespace Olap
+
+} // namespace Voxelize
 
 #endif // OVERLAP_HPP

@@ -18,7 +18,7 @@
 #   include "gpu_handler.hpp"
 #endif // CPU_ONLY
 
-using namespace Voxelize;
+namespace Voxelize {
 
 struct Globals
 {// {{{
@@ -115,5 +115,6 @@ Globals::Globals (uint64_t Nparticles_, int64_t box_N_, int64_t dim_, float box_
     coords { coords_ }, radii { radii_ }, field { field_ }, box { box_ }
 { }
 
+} // namespace Voxelize
 
 #endif // GLOBALS_HPP

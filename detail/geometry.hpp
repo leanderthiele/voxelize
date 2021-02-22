@@ -29,6 +29,8 @@
 #   define M_4PI_3 4.1887902047863909846168578443726705122628925325001410946332594564
 #endif
 
+namespace Voxelize {
+
 static inline float
 hypotsq (float x, float y, float z)
 {// {{{
@@ -222,5 +224,7 @@ TEST_is_trivial (void)
                   << Ncases[ii] << std::endl;
 }// }}}
 #endif // TESTS
+
+} // namespace Voxelize
 
 #endif // GEOMETRY_HPP

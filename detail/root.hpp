@@ -31,7 +31,7 @@
 #   include "gpu_handler_implementation.hpp"
 #endif // CPU_ONLY
 
-using namespace Voxelize;
+namespace Voxelize {
 
 #ifndef CPU_ONLY
 #ifndef WORKERS_MAKE_BATCHES
@@ -406,5 +406,7 @@ root_add_process ()
     #endif // NDEBUG
 }// }}}
 #endif // EXTRA_ROOT_ADD, CPU_ONLY
+
+} // namespace Voxelize
 
 #endif // ROOT_HPP
