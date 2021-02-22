@@ -1,17 +1,19 @@
 # Voxelize
 
-* [Introduction](#intro)
+* [What this code computes](#intro)
 * [The two flavours of the code](#flavours)
 * [Performance and how to tune it](#performance)
 * [Accuracy](#accuracy)
 * [Dependencies](#dependencies)
 * [Building PyTorch](#pytorch)
 * [Build](#build)
+* [Thread safety](#threads)
+* [Python bindings](#python)
 
 
-Author: [Leander Thiele](mailto:lthiele@princeton.edu) with encouragement from Francisco Villaescusa-Navarro
+Author: [Leander Thiele](mailto:lthiele@princeton.edu)
 
-## Introduction <a name="intro"/>
+## What this code computes <a name="intro"/>
 
 *Voxelize* converts a list of simulation particles which have a field associated with them
 into a cubic lattice of voxels.
@@ -250,3 +252,14 @@ for the CPU-only, and/or
 make voxelize_gpu
 ```
 for the CPU+GPU version.
+
+
+## Thread safety <a name="threads"/>
+
+Neither the `voxelize` functions nor the `gpu_handler` class are thread safe.
+Please use multiprocessing (e.g. through MPI) for parallel execution.
+
+
+## Python bindings <a name="python"/>
+
+Are under development.
