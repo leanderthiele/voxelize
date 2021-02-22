@@ -40,7 +40,7 @@ the output field will be a local density too (and not a mass).
 
 ## The two flavours of the code <a name="flavours"/>
 
-*Voxelize* can be used in two flavours:
+*Voxelize* can be built and used in two flavours:
 * CPU-only;
 * CPU+GPU.
 
