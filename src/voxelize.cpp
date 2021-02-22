@@ -1,5 +1,11 @@
 #include "defines.hpp"
 
+// FIXME
+// declare Globals globals before including the headers.
+// Then we can make it static and don't need extern anywhere else.
+//
+// Check that all functions in the header files have static linkage
+
 #include <cassert>
 #include <cstdio>
 #include <iostream>
@@ -14,6 +20,20 @@
 #   include "cuda_profiler_api.h"
 #endif // CPU_ONLY
 
+#ifndef NDEBUG
+#   include <chrono>
+#endif // NDEBUG
+
+#ifdef TESTS
+#   include <cstdlib>
+#   include <cmath>
+#endif // TESTS
+
+// have this before inclusion of the other header
+// files so we can have this variable with static linkage
+#include "globals.hpp"
+static Globals globals;
+
 #ifdef CPU_ONLY
 #   include "voxelize_cpu.hpp"
 #else // CPU_ONLY
@@ -21,47 +41,12 @@
 #endif // CPU_ONLY
 
 #include "geometry.hpp"
-#include "globals.hpp"
 #include "root.hpp"
 #include "workers.hpp"
 
 #ifndef CPU_ONLY
 #   include "gpu_handler.hpp"
 #endif // CPU_ONLY
-
-#ifdef TESTS
-#   include <cstdlib>
-#   include <cmath>
-#   include <chrono>
-#endif // TESTS
-
-// TODO
-//
-// 1) store Rmin, Rmax in network file name and retrieve it in GPU Handler.
-//    If a particle has a radius falling outside this range, call the slow
-//    Olap::overlap routine to do the calculation.
-//    For diagnostics, count for how many particles this is the case.
-//    DONE
-//
-// 2) make GPU Handler a stand-alone pointer, which voxelize_gpu takes as
-//    an argument. This allows repeated calls of the routine without the need
-//    to go through network loading etc every single time.
-//    DONE
-//
-// 3) template the whole thing on dimensionality, voxelize_gpu calls the
-//    appropriate template
-//    DONE
-//
-// 4) have CPU_ONLY macro
-//    -- with the same number of CPUs, this is probably about 10 times slower
-//    DONE
-//
-// 5) have SYNCHRONIZE macro
-//
-// 6) replace HYPOT calls
-//    DONE
-
-Globals globals;
 
 namespace Voxelize {
 
@@ -81,7 +66,9 @@ voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
                       #endif // CPU_ONLY
                       );
 
+    #ifndef NDEBUG
     auto t1 = std::chrono::steady_clock::now();
+    #endif // NDEBUG
 
     #if !defined(NDEBUG) && !defined(CPU_ONLY)
     cudaProfilerStart();
@@ -117,9 +104,11 @@ voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
     cudaProfilerStop();
     #endif // NDEBUG, CPU_ONLY
 
+    #ifndef NDEBUG
     auto t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = t2 - t1;
     std::fprintf(stderr, "voxelize_gpu function took %.4f seconds\n", diff.count());
+    #endif // NDEBUG
 
     #ifdef COUNT
     #ifndef CPU_ONLY

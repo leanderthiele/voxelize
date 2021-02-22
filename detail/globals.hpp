@@ -20,9 +20,6 @@
 
 using namespace Voxelize;
 
-struct Globals;
-extern Globals globals;
-
 struct Globals
 {// {{{
     #ifndef CPU_ONLY
