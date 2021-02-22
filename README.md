@@ -13,6 +13,7 @@
 
 Author: [Leander Thiele](mailto:lthiele@princeton.edu)
 
+
 ## What this code computes <a name="intro"/>
 
 *Voxelize* converts a list of simulation particles which have a field associated with them
@@ -154,7 +155,7 @@ of PyTorch that will most likely be faster than the "many-linux" pre-built binar
 Here are some instructions (replace `export` with the appropriate command for your shell
 if necessary):
 1. ```shell
-   git clone https://github.com/pytorch/pytorch.git
+   git clone --recursive https://github.com/pytorch/pytorch.git
    ```
    We found that the, as of writing, most recent release-version 1.7.0 has bugs
    related to the FBGEMM part. You may be able to compile that version by setting
