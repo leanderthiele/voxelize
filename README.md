@@ -85,7 +85,7 @@ We provide a complete example of how to use the code (in both versions) in [src/
 
 ## Performance and how to tune it <a name="performance"/>
 
-For our tests, we used the script [src/example.cpp'](src/example.cpp) This program loads the gas particles
+For our tests, we used the script [src/example.cpp](src/example.cpp). This program loads the gas particles
 from an Illustris-type simulation and constructs the gas density field.
 The simulation has 256<sup>3</sup> gas particles in a 25 Mpc/*h* box, which we assign
 to a 256<sup>3</sup> lattice.
@@ -102,20 +102,23 @@ The CPU-only version should require no tuning, and should run fine over a range 
 become relevant with a large number of threads).
 
 We found that the CPU+GPU version performs best with 1 GPU and of the order 8-12 CPU-threads.
+Fewer than 6 CPU-threads will probably not be able to feed the GPU enough work, and fewer than 4
+will not work at all.
 Although the code supports multiple GPUs in principle, we found that not much performance could
 be gained by running on more than one GPU.
-A point that may require tuning is the batch size, which you can find in the [include/defines.hpp](include/defines.hpp).
-In our tests on a GPU with 16GB memory we found 2<sup>17</sup> to be a good choice.
+A point that may require tuning is the batch size, which you can find in [include/defines.hpp](include/defines.hpp).
+In our tests on a GPU with 16GB memory we found 2<sup>17</sup> to be a good choice
+(which is implemented in the above header file by default).
 The user may want to adjust this number proportionally to the memory their GPUs have.
 If the number of CPU-threads as well as the batch size are chosen well, utilization metrics
-shown by e.g. `nvidia-smi` or `gpustat` will exceed 90% during most of the code's runtime.
+shown by e.g. `nvidia-smi` will exceed 90% during most of the code's runtime.
 
 
 ## Accuracy <a name="accuracy"/>
 
 Since the CPU+GPU version uses an interpolator, the results will differ from the analytic calculation
 which the CPU-only version performs.
-Using the script [src/example.cpp](src/example.cpp), we compared the outputs of the two algorithms.
+Using the script [src/example.cpp](src/example.cpp), we compared the outputs of the code's two flavours.
 A histogram of the relative difference between the two results is shown here:
 
 ![](data/network/network_accuracy.png)
@@ -170,9 +173,7 @@ if necessary):
    for `gcc` and `nvcc`.
 3. Load some other libraries if necessary, e.g. on Tiger
    ```shell
-   module load cudnn/cuda-11.0/8.0.2
-   module load fftw/gcc/3.3.4
-   module load intel-mkl/2020.1/1/64
+   module load cudnn/cuda-11.0/8.0.2 fftw/gcc/3.3.4 intel-mkl/2020.1/1/64
    ```
 4. Set up a build and install path (they can be identical but we recommend to have them separate)
    ```shell
@@ -221,7 +222,7 @@ if necessary):
     ```shell
     cmake --build . --target install
     ```
-    This will take a long time (I think it was like 12 hours on Tiger),
+    This will take a long time (I think it was about 12 hours on Tiger),
     so maybe do this in a `screen` session so you don't have to keep
     the SSH connection to the remote stable.
 
@@ -239,6 +240,8 @@ macro in [include/defines.hpp](include/defines.hpp) as mentioned above.
 Define `NDEBUG` and un-define `COUNT` in [include/defines.hpp](include/defines.hpp) if you don't
 want to see any print output during runtime.
 We recommend to keep these as they are at least until you have successfully run the code once.
+`NDEBUG` also disables a lot of useful asserts which have very little runtime overhead and make it
+much easier to diagnose problems.
 
 Load the appropriate modules, e.g. on Tiger
 ```shell
