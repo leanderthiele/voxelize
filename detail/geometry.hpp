@@ -112,8 +112,8 @@ is_no_intersect (const std::array<float,3> &cub, float R)
 
 // this function checks for trivial cases and returns non-zero if the configuration
 // is indeed trivial.
-// In that case, the return argument Tvol *vol contains the trivially computable volume.
-// Otherwise the return argument's value is undefined.
+// In that case, the return argument float vol contains the trivially computable volume.
+// Otherwise the return argument's value should not be used.
 //
 // It is assumed that translations and reflections have already been modded out
 // using the previous functions.

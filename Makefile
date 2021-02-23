@@ -83,7 +83,7 @@ VOXELIZE_CPU_DEP:= $(SRC)/voxelize.cpp $(INCLUDE)/voxelize_cpu.hpp \
 
 VOXELIZE_GPU_DEP:= $(SRC)/voxelize.cpp $(INCLUDE)/voxelize_gpu.hpp \
                    $(INCLUDE)/defines.hpp $(INCLUDE)/gpu_handler.hpp \
-                   $(wildcard $(INCLUDE)/*.hpp)
+                   $(wildcard $(DETAIL)/*.hpp)
 
 SAMPLE_DEP:= $(SRC)/generate_samples.cpp \
 	     $(INCLUDE)/defines.hpp $(DETAIL)/network.hpp \
