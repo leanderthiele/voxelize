@@ -221,4 +221,8 @@ clean :
 	rm -f example_gpu
 	rm -f train_network
 	rm -f generate_samples
+	rm -f $(PYVOXELIZE)/Rlims.txt
+	rm -f $(PYVOXELIZE)/network.pt
+	rm -f $(PYVOXELIZE)/libvoxelize_cpu.so
+	rm -f $(PYVOXELIZE)/libvoxelize_gpu.so
 	$(PIP) uninstall -qy voxelize
