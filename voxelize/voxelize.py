@@ -90,7 +90,7 @@ class Voxelize :
     def __exit__(self, exc_type, exc_value, exc_traceback) :
         self.__del__()
 
-    def __call__(self, box_N, box_L, coords, radii, field, box=None) :
+    def __call__(self, box_L, coords, radii, field, box) :
         coords = coords.astype(np.float32)
         radii = radii.astype(np.float32)
         field = field.astype(np.float32)
@@ -106,10 +106,15 @@ class Voxelize :
         assert(coords.shape[0] == Nparticles)
         assert(field.shape[0] == Nparticles)
 
-        if box is None :
+        if isinstance(box, int) :
+            box_N = box
             box = np.zeros(box_N*box_N*box_N, dtype=np.float32)
+        else :
+            assert(len(box.shape) == 3)
+            assert(box.shape[0] == box.shape[1] == box.shape[2])
+            box_N = box.shape[0]
 
-        args = [ Nparticles, box_N, dim, box_L, coords.flatten(), radii, field.flatten() ]
+        args = [ Nparticles, box_N, dim, box_L, coords.flatten(), radii, field.flatten(), box.flatten() ]
         if self.gpu_handler is not None :
             args.append(self.gpu_handler)
         
