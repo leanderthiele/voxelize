@@ -169,25 +169,25 @@ workers_process ()
             #endif // WORKERS_MAKE_BATCHES
             #endif // CPU_ONLY
 
-            for (int64_t xx  = (int64_t)(part_centre[0]-R) - 1L;
-                         xx <= (int64_t)(part_centre[0]+R);
-                       ++xx)
+            for (int xx  = (int)(part_centre[0]-R) - 1L;
+                     xx <= (int)(part_centre[0]+R);
+                   ++xx)
             {
-                int64_t idx_x = globals.box_N * globals.box_N
-                                * ((globals.box_N+xx%globals.box_N) % globals.box_N);
+                size_t idx_x = globals.box_N * globals.box_N
+                               * periodic_idx(xx, globals.box_N);
 
-                for (int64_t yy  = (int64_t)(part_centre[1]-R) - 1L;
-                             yy <= (int64_t)(part_centre[1]+R);
-                           ++yy)
+                for (int yy  = (int)(part_centre[1]-R) - 1L;
+                         yy <= (int)(part_centre[1]+R);
+                       ++yy)
                 {
-                    int64_t idx_y = idx_x + globals.box_N
-                                            * ((globals.box_N+yy%globals.box_N) % globals.box_N);
+                    size_t idx_y = idx_x + globals.box_N
+                                           * periodic_idx(yy, globals.box_N);
 
-                    for (int64_t zz  = (int64_t)(part_centre[2]-R) - 1L;
-                                 zz <= (int64_t)(part_centre[2]+R);
-                               ++zz)
+                    for (int zz  = (int)(part_centre[2]-R) - 1L;
+                             zz <= (int)(part_centre[2]+R);
+                           ++zz)
                     {
-                        int64_t idx = idx_y + ((globals.box_N+zz%globals.box_N) % globals.box_N);
+                        size_t idx = idx_y + periodic_idx(zz, globals.box_N);
                         std::array<float,3> cub { (float)(xx), (float)(yy), (float)(zz) };
 
                         mod_translations(cub, part_centre);

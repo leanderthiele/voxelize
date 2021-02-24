@@ -31,6 +31,13 @@
 
 namespace Voxelize {
 
+// wraps idx periodically with period N
+static inline size_t
+periodic_idx (int idx, int N)
+{// {{{
+    return (N + idx%N) % N;
+}// }}}
+
 static inline float
 hypotsq (float x, float y, float z)
 {// {{{
