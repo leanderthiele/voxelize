@@ -9,6 +9,10 @@
 #
 # 	example_cpu
 # 	example_gpu
+#
+# 	python_cpu (runs pip, also generates lib/libvoxelize_cpu.so)
+# 	python (runs pip, also generates lib/libvoxelize_cpu.so
+# 	                             and lib/libvoxelize_gpu.so)
 # 	
 # 	generate_samples (generates a script that can be used
 # 	                  to generate samples to train the network)

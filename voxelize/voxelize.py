@@ -83,6 +83,7 @@ class Voxelize :
     def __del__(self) :
         if self.gpu_handler is not None :
             Voxelize.__delete_gpu_handler(self.gpu_handler)
+            self.gpu_handler = None
 
     def __enter__(self) :
         return self
@@ -94,8 +95,6 @@ class Voxelize :
         coords = coords.astype(np.float32)
         radii = radii.astype(np.float32)
         field = field.astype(np.float32)
-        if box is not None :
-            box = box.astype(np.float32)
 
         assert(len(radii.shape) == 1)
         assert(len(coords.shape) == 2 and coords.shape[1]==3)
@@ -113,8 +112,9 @@ class Voxelize :
             assert(len(box.shape) == 3)
             assert(box.shape[0] == box.shape[1] == box.shape[2])
             box_N = box.shape[0]
+            box = box.astype(np.float32).flatten()
 
-        args = [ Nparticles, box_N, dim, box_L, coords.flatten(), radii, field.flatten(), box.flatten() ]
+        args = [ Nparticles, box_N, dim, box_L, coords.flatten(), radii, field.flatten(), box ]
         if self.gpu_handler is not None :
             args.append(self.gpu_handler)
         
