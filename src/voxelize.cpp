@@ -127,4 +127,25 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
 }// }}}
 
 
+// for the Python wrapper -- it's easier if we have the unmangled names available
+extern "C"
+{
+    void
+    pyvoxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
+               float *coords, float *radii, float *field, float *box
+               #ifndef CPU_ONLY
+               , gpu_handler * gpu
+               #endif // CPU_ONLY
+               )
+    {
+        voxelize(Nparticles, box_N, dim, box_L,
+                 coords, radii, field, box
+                 #ifndef CPU_ONLY
+                 , gpu
+                 #endif // CPU_ONLY
+                 );
+    }
+} // extern "C"
+
+
 } // namespace Voxelize

@@ -319,18 +319,21 @@ load_network (const std::string &network_file, std::shared_ptr<Net> &net_ptr, fl
     }
 }// }}}
 
-// helper functions for the python wrapper
-gpu_handler  *
-pynewgpuhandler (const char *network_dir)
-{// {{{
-    return new gpu_handler(std::string(network_dir));
-}// }}}
+extern "C"
+{
+    // helper functions for the python wrapper
+    gpu_handler  *
+    pynewgpuhandler (const char *network_dir)
+    {// {{{
+        return new gpu_handler(std::string(network_dir));
+    }// }}}
 
-void
-pydeletegpuhandler (gpu_handler *gpu)
-{// {{{
-    delete gpu;
-}// }}}
+    void
+    pydeletegpuhandler (gpu_handler *gpu)
+    {// {{{
+        delete gpu;
+    }// }}}
+} // extern "C"
 
 } // namespace Voxelize
 

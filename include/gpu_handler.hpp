@@ -56,10 +56,6 @@ public :
                        std::shared_ptr<StreamWState> &stream);
 };// }}}
 
-// helper functions for the python wrapper
-gpu_handler * pynewgpuhandler (const char *network_dir);
-void pydeletegpuhandler (gpu_handler *gpu);
-
 } // namespace Voxelize
 
 #endif // GPU_HANDLER_HPP
