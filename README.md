@@ -91,7 +91,9 @@ The simulation has 256<sup>3</sup> gas particles in a 25 Mpc/*h* box, which we a
 to a 256<sup>3</sup> lattice.
 
 Using one GPU (Tesla P100) together with 10 CPUs, the CPU+GPU version performs the task
-in about 3.7 seconds (without construction of the `gpu_handler` and disk I/O).
+in about 2.4 seconds (without construction of the `gpu_handler` and disk I/O).
+Reducing the number of CPU-threads to 7 (so that in principle one of the GPU nodes on Princeton's Tiger machine
+could be completely filled), runtime increases slightly to 3.1 seconds.
 
 The CPU-only version takes about 10 times longer, on 10 CPUs. It should be noted that
 it is a bit difficult to compare performances in this way, since some users may find it
