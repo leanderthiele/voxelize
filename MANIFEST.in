@@ -1,0 +1,4 @@
+include voxelize/libvoxelize_cpu.so
+include voxelize/libvoxelize_gpu.so
+include voxelize/Rlims.txt
+include voxelize/network.pt

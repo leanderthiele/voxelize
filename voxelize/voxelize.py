@@ -1,11 +1,9 @@
 import ctypes as ct
+from os import path
+from sys import stdout
+
 import numpy as np
 from numpy.ctypeslib import ndpointer, as_ctypes
-
-# TODO
-# the current code does not deal with the mangled names,
-# this needs to be implemented
-# The names that are to be replaced are marked by << >>
 
 try :
     from importlib import resources as importlib_resources
@@ -13,15 +11,29 @@ except ImportError :
     # we're on some ancient python
     import importlib_resources
 
-class Voxelize :
+def c_str(some_str) :
+    if isinstance(some_str, str) :
+        return ct.c_char_p(some_str.encode(stdout.encoding))
+    elif isinstance(some_str, bytes) :
+        return ct.c_char_p(some_str)
+    else :
+        raise TypeError('not a string or bytes object')
 
-    __cpu_only = <<CPU_ONLY>>
+class Voxelize :
     
-    with importlib_resources.path(__name__, "libvoxelize_cpu.so") as fname :
+    with importlib_resources.path('voxelize', 'libvoxelize_cpu.so') as fname :
         __libvoxelize_cpu = ct.CDLL(fname);
-    if not __cpu_only :
-        with importlib_resources.path(__name__, "libvoxelize_gpu.so") as fname :
+    try :
+        with importlib_resources.path('voxelize', 'libvoxelize_gpu.so') as fname :
             __libvoxelize_gpu = ct.CDLL(fname);
+            __cpu_only = False
+    except FileNotFoundError :
+        __cpu_only = True
+
+    if __cpu_only :
+        print('Only the CPU-only flavour of Voxelize is available!')
+    else :
+        print('Both the CPU-only and the CPU+GPU flavours of Voxelize are available!')
 
     # for both cpu and gpu
     __common_argtypes = [ ct.c_size_t, # Nparticles
@@ -52,17 +64,17 @@ class Voxelize :
         # gpu handler free
         __delete_gpu_handler = __libvoxelize_gpu.pydeletegpuhandler
         __delete_gpu_handler.restype = None
-        __delete_gpu_handler.argtypes = ct.c_void_p
+        __delete_gpu_handler.argtypes = [ct.c_void_p, ]
 
     def __init__(self, use_gpu=False, network_dir=None) :
         if use_gpu :
-            if __cpu_only :
+            if Voxelize.__cpu_only :
                 raise RuntimeError('your python wrapper is configured for cpu-only mode.')
             if network_dir is None :
-                with importlib_resources.path(__name__, '<<NETWORK_PATH>>') as fname :
-                    self.gpu_handler = Voxelize.__new_gpu_handler(fname)
-            else :
-                self.gpu_handler = Voxelize.__new_gpu_handler(network_dir)
+                # this is really hacky -- we're assuming that network.pt and Rlims.pt are
+                # in the same directory as this script
+                network_dir = path.dirname(path.realpath(__file__))
+            self.gpu_handler = Voxelize.__new_gpu_handler(c_str(network_dir))
         else :
             if network_dir is not None :
                 raise RuntimeError('use_gpu is False but network_dir is specified.')
