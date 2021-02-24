@@ -82,7 +82,7 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
     #endif // EXTRA_ROOT_ADD, CPU_ONLY
 
     // allow nesting
-    omp_set_nested(true);
+    omp_set_max_active_levels(3);
 
     #pragma omp parallel sections
     {

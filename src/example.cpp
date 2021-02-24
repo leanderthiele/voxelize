@@ -54,7 +54,7 @@ main ()
         radii[ii] = std::cbrt(masses[ii] / M_4PI_3f32 / density[ii]);
     
     // allocate an output buffer for the data product and fill with zeros
-    int64_t box_N = 256;
+    size_t box_N = 256;
     float *box = (float *)std::malloc(box_N * box_N * box_N * sizeof(float));
     for (size_t ii=0; ii != (size_t)(box_N * box_N * box_N); ++ii)
         box[ii] = 0.0F;
