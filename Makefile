@@ -4,6 +4,9 @@
 # 	voxelize_cpu (generates lib/libvoxelize_cpu.a)
 # 	voxelize_gpu (generates lib/libvoxelize_gpu.a)
 #
+# 	voxelize_cpu_shared (generates lib/libvoxelize_cpu.so)
+# 	voxelize_gpu_shared (generates lib/libvoxelize_gpu.so)
+#
 # 	example_cpu
 # 	example_gpu
 # 	
@@ -48,15 +51,23 @@ OMPFLAG:= -fopenmp
 AR:= ar
 ARFLAGS:= rcs
 
+PIP:= pip
+PIPFLAGS:= --user
+PYTHON:= python
+
 # directory structure
-SRC:=./src
+SRC:= ./src
 INCLUDE:= ./include
 DETAIL:= ./detail
 BUILD:= ./build
 LIB:= ./lib
 DATA:= ./data
+PYUTILS:= ./python_utils
+PYVOXELIZE:= ./voxelize
 
 # only required for train_network, example_gpu
+# This will also be the network used in the Python package
+# if none is supplied
 NETWORK_PATH:= $(DATA)/network
 
 # only required for generate_samples, train_network
@@ -103,16 +114,32 @@ EXAMPLE_GPU_DEP:= $(SRC)/example.cpp \
 .PHONY: clean
 .PHONY: build lib data
 .PHONY: voxelize_cpu voxelize_gpu
+.PHONY: voxelize_cpu_shared voxelize_gpu_shared
+.PHONY: python pymanifest pysource
 
 voxelize_cpu: $(LIB)/libvoxelize_cpu.a lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 
 voxelize_gpu: $(LIB)/libvoxelize_gpu.a lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
+
+voxelize_cpu_shared: $(LIB)/libvoxelize_cpu.so lib $(BUILD)/voxelize_cpu_fpic.o $(VOXELIZE_CPU_DEP)
+
+voxelize_gpu_shared: $(LIB)/libvoxelize_gpu.so lib $(BUILD)/voxelize_gpu_fpic.o $(VOXELIZE_GPU_DEP)
+
+python: $(LIB)/libvoxelize_cpu.so lib $(BUILD)/voxelize_cpu_fpic.o $(VOXELIZE_CPU_DEP) \
+        $(LIB)/libvoxelize_gpu.so $(BUILD)/voxelize_gpu_fpic.o $(VOXELIZE_GPU_DEP) \
+        pymanifest pysource
 
 $(LIB)/libvoxelize_cpu.a: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_cpu.a $(BUILD)/voxelize_cpu.o
 
 $(LIB)/libvoxelize_gpu.a: lib $(BUILD)/voxelize_gpu.o $(VOXELIZE_GPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_gpu.a $(BUILD)/voxelize_gpu.o
+
+$(LIB)/libvoxelize_cpu.so: lib $(BUILD)/voxelize_cpu_fpic.o $(VOXELIZE_CPU_DEP)
+	$(CC) -shared -o $(LIB)/libvoxelize_cpu.so $(BUILD)/voxelize_cpu_fpic.o $(CPU_LINK)
+
+$(LIB)/libvoxelize_gpu.so: lib $(BUILD)/voxelize_gpu_fpic.o $(VOXELIZE_GPU_DEP)
+	$(CC) -shared -o $(LIB)/libvoxelize_gpu.so $(BUILD)/voxelize_gpu_fpic.o $(GPU_LINK)
 
 example_cpu: $(LIB)/libvoxelize_cpu.a $(BUILD)/example_cpu.o $(EXAMPLE_CPU_DEP)
 	$(CC) -o example_cpu $(BUILD)/example_cpu.o $(CPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_cpu
@@ -127,12 +154,21 @@ train_network: data $(BUILD)/train_network.o $(TRAIN_DEP)
 	$(CC) -o train_network $(BUILD)/train_network.o $(GPU_LINK)
 
 
+# Object files
 $(BUILD)/voxelize_cpu.o: build $(VOXELIZE_CPU_DEP)
 	$(CC) -c $(CCFLAGS) $(CPU_FLAG) $(CPU_INCL) $(OMPFLAG) \
               -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/voxelize_cpu.o $(SRC)/voxelize.cpp
 
 $(BUILD)/voxelize_gpu.o: build $(VOXELIZE_GPU_DEP)
 	$(CC) -c $(CCFLAGS) $(GPU_FLAG) $(GPU_INCL) $(OMPFLAG) \
+              -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/voxelize_gpu.o $(SRC)/voxelize.cpp
+
+$(BUILD)/voxelize_cpu_fpic.o: build $(VOXELIZE_CPU_DEP)
+	$(CC) -c $(CCFLAGS) -fPIC $(CPU_FLAG) $(CPU_INCL) $(OMPFLAG) \
+              -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/voxelize_cpu.o $(SRC)/voxelize.cpp
+
+$(BUILD)/voxelize_gpu_fpic.o: build $(VOXELIZE_GPU_DEP)
+	$(CC) -c $(CCFLAGS) -fPIC $(GPU_FLAG) $(GPU_INCL) $(OMPFLAG) \
               -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/voxelize_gpu.o $(SRC)/voxelize.cpp
 
 $(BUILD)/example_cpu.o: build $(EXAMPLE_CPU_DEP)
@@ -154,6 +190,22 @@ $(BUILD)/train_network.o: build $(TRAIN_DEP)
               -DINPUTS_PATH=\"$(INPUTS_PATH)\" -DOUTPUTS_PATH=\"$(OUTPUTS_PATH)\" \
               -DNETWORK_PATH=\"$(NETWORK_PATH)\" \
               -I$(INCLUDE) -I$(DETAIL) -o $(BUILD)/train_network.o $(SRC)/train_network.cpp
+
+# Python helpers
+
+pymanifest:
+	cp $(PYUTILS)/templ_MANIFEST.in MANIFEST.in
+	sed -i "s|<<LIB>>|$(LIB)|g" MANIFEST.in
+	sed -i "s|<<NETWORK_PATH>>|$(NETWORK_PATH)|g" MANIFEST.in
+
+pysource:
+	mkdir -p $(PYVOXELIZE)
+	cp $(PYUTILS)/templ_voxelize.py $(PYVOXELIZE)/voxelize.py
+	sed -i "s|<<NETWORK_PATH>>|$(NETWORK_PATH)|g" $(PYVOXELIZE)/voxelize.py
+
+
+
+# directories
 
 build:
 	mkdir -p $(BUILD)

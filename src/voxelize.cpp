@@ -51,7 +51,7 @@ static Voxelize::Globals globals;
 namespace Voxelize {
 
 void
-voxelize(uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
+voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
          float *coords, float *radii, float *field, float *box
          #ifndef CPU_ONLY
          , gpu_handler * gpu

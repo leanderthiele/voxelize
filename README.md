@@ -49,7 +49,7 @@ by Strobl et al. 2016 (https://github.com/severinstrobl/overlap).
 In order to use the CPU-only version, link with lib/libvoxelize\_cpu.a
 and include the header [include/voxelize\_cpu.hpp](include/voxelize_cpu.hpp), which declares the function
 ```C
-void voxelize (uint64_t Nparticles, int64_t box_N, int64_t dim, float box_L,
+void voxelize (size_t Nparticles, size_t box_N, size_t dim, float box_L,
                float * coords, float * radii, float * field, float * box);
 ```
 Here, `box` is an output buffer that can fit at least `box_N`<sup>3</sup> floats,
