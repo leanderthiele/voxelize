@@ -154,10 +154,10 @@ $(LIB)/libvoxelize_gpu.so: lib $(BUILD)/voxelize_gpu_fpic.o $(VOXELIZE_GPU_DEP)
 	$(CC) -shared -o $(LIB)/libvoxelize_gpu.so $(BUILD)/voxelize_gpu_fpic.o $(GPU_LINK)
 
 example_cpu: $(LIB)/libvoxelize_cpu.a $(BUILD)/example_cpu.o $(EXAMPLE_CPU_DEP)
-	$(CC) -o example_cpu $(BUILD)/example_cpu.o $(CPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_cpu
+	$(CC) -o example_cpu $(BUILD)/example_cpu.o $(CPU_LINK) $(HDF5_LINK) -L$(LIB) -l:libvoxelize_cpu.a
 
 example_gpu: $(LIB)/libvoxelize_gpu.a $(BUILD)/example_gpu.o $(EXAMPLE_GPU_DEP)
-	$(CC) -o example_gpu $(BUILD)/example_gpu.o $(GPU_LINK) $(HDF5_LINK) -L$(LIB) -lvoxelize_gpu
+	$(CC) -o example_gpu $(BUILD)/example_gpu.o $(GPU_LINK) $(HDF5_LINK) -L$(LIB) -l:libvoxelize_gpu.a
 
 generate_samples: data $(BUILD)/generate_samples.o $(SAMPLES_DEP)
 	$(CC) -o generate_samples $(BUILD)/generate_samples.o $(CPU_LINK)

@@ -82,7 +82,11 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
     #endif // EXTRA_ROOT_ADD, CPU_ONLY
 
     // allow nesting
-    omp_set_max_active_levels(3);
+    // -- OMP says it's recommended to use omp_set_max_active_levels() instead,
+    //    but this results in much slower code when compiled from the C++ interface.
+    //    (for some reason the python wrapper doesn't have a problem with this,
+    //     presumably it sets some environment variable internally)
+    omp_set_nested(true);
 
     #pragma omp parallel sections
     {
