@@ -30,8 +30,8 @@ class Voxelize :
     except FileNotFoundError :
         __cpu_only = True
     except OSError as err :
-        if 'cannot open shared object file' in err.strerr :
-            print('libvoxelize_gpu.so found but library not found : %s'%err.strerror)
+        if 'cannot open shared object file' in str(err) :
+            print('libvoxelize_gpu.so found but some library not found : %s'%str(err))
             print('Will continue with CPU-only version.')
             __cpu_only = True
         else :

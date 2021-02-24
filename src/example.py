@@ -1,4 +1,4 @@
-CPU_ONLY = False
+CPU_ONLY = True
 
 import h5py
 import numpy as np
