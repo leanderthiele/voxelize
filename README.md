@@ -258,6 +258,15 @@ make voxelize_gpu
 ```
 for the CPU+GPU version.
 
+You can also build shared libraries, by typing
+```shell
+make voxelize_cpu_shared
+```
+or
+```shell
+make voxelize_gpu_shared
+```
+
 
 ## Thread safety <a name="threads"/>
 
@@ -305,5 +314,5 @@ The user interface is defined by the following two methods:
   or a 3-dimensional numpy-array.
   This method returns the modified box.
 
-The `Voxelize` class can conveniently used in a context manager.
+The `Voxelize` class can conveniently be used in a context manager.
 See [src/example.py](src/example.py) for a complete example.
