@@ -267,4 +267,43 @@ Please use multiprocessing (e.g. through MPI) for parallel execution.
 
 ## Python bindings <a name="python"/>
 
-Are under development.
+In order to install the Python wrapper, please first read the instructions
+on how to edit the Makefile in the [Build](#build) section.
+Additionally, you may want to modify the variables `PIP` and `PIPFLAGS` in
+the Makefile.
+
+Then,
+```shell
+make python_cpu
+```
+for the CPU-only, or
+```shell
+make python
+```
+for a combined CPU-only and CPU+GPU version.
+
+Then,
+```python
+from voxelize import Voxelize
+```
+will import the only class the Python wrapper defines.
+
+The user interface is defined by the following two methods:
+* ```python
+  Voxelize.__init__(use_gpu=False, network_dir=None)
+  ```
+  Both options are only relevant if you want to use the CPU+GPU flavour.
+  The `network_dir` argument allows you, as in the C++ interface, to pass a custom
+  path where a network is located. By default, the network given in the
+  `NETWORK_PATH` variable in the Makefile is used (it is copied into the Python package).
+  The constructor will load the network into GPU memory if `use_gpu=True`.
+* ```python
+  Voxelize.__call__(box_L, coords, radii, field, box)
+  ```
+  The arguments are quite analogous to the C++ version, the only difference being
+  that `box` can be either an integer (in which case it is interpreted as `box_N`)
+  or a 3-dimensional numpy-array.
+  This method returns the modified box.
+
+The `Voxelize` class can conveniently used in a context manager.
+See [src/example.py](src/example.py) for a complete example.
