@@ -115,7 +115,8 @@ EXAMPLE_GPU_DEP:= $(SRC)/example.cpp \
 .PHONY: build lib data
 .PHONY: voxelize_cpu voxelize_gpu
 .PHONY: voxelize_cpu_shared voxelize_gpu_shared
-.PHONY: python pymanifest pysource
+.PHONY: python python_cpu
+.PHONY: pymanifest pymanifest_cpu pysource pysource_cpu
 
 voxelize_cpu: $(LIB)/libvoxelize_cpu.a lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 
@@ -128,6 +129,11 @@ voxelize_gpu_shared: $(LIB)/libvoxelize_gpu.so lib $(BUILD)/voxelize_gpu_fpic.o 
 python: $(LIB)/libvoxelize_cpu.so lib $(BUILD)/voxelize_cpu_fpic.o $(VOXELIZE_CPU_DEP) \
         $(LIB)/libvoxelize_gpu.so $(BUILD)/voxelize_gpu_fpic.o $(VOXELIZE_GPU_DEP) \
         pymanifest pysource
+	$(PIP) install . $(PIPFLAGS)
+
+python_cpu: $(LIB)/libvoxelize_cpu.so lib $(BUILD)/voxelize_cpu_fpic.o $(VOXELIZE_CPU_DEP) \
+            pymanifest_cpu pysource_cpu
+	$(PIP) install . $(PIPFLAGS)
 
 $(LIB)/libvoxelize_cpu.a: lib $(BUILD)/voxelize_cpu.o $(VOXELIZE_CPU_DEP)
 	$(AR) $(ARFLAGS) $(LIB)/libvoxelize_cpu.a $(BUILD)/voxelize_cpu.o
@@ -198,10 +204,21 @@ pymanifest:
 	sed -i "s|<<LIB>>|$(LIB)|g" MANIFEST.in
 	sed -i "s|<<NETWORK_PATH>>|$(NETWORK_PATH)|g" MANIFEST.in
 
+pymanifest_cpu:
+	cp $(PYUTILS)/templ_MANIFEST.in MANIFEST.in
+	sed -i "s|<<LIB>>|$(LIB)|g" MANIFEST.in
+	sed -i "|<<NETWORK_PATH>>|d" MANIFEST.in
+
 pysource:
 	mkdir -p $(PYVOXELIZE)
 	cp $(PYUTILS)/templ_voxelize.py $(PYVOXELIZE)/voxelize.py
 	sed -i "s|<<NETWORK_PATH>>|$(NETWORK_PATH)|g" $(PYVOXELIZE)/voxelize.py
+	sed -i "s|<<CPU_ONLY>>|False|g" $(PYVOXELIZE)/voxelize.py
+
+pysource_cpu:
+	mkdir -p $(PYVOXELIZE)
+	cp $(PYUTILS)/templ_voxelize.py $(PYVOXELIZE)/voxelize.py
+	sed -i "s|<<CPU_ONLY>>|True|g" $(PYVOXELIZE)/voxelize.py
 
 
 
@@ -219,7 +236,9 @@ data:
 clean :
 	rm -rf $(BUILD)
 	rm -rf $(LIB)
-	rm -rf example_cpu
-	rm -rf example_gpu
-	rm -rf train_network
-	rm -rf generate_samples
+	rm -rf $(PYVOXELIZE)
+	rm -f example_cpu
+	rm -f example_gpu
+	rm -f train_network
+	rm -f generate_samples
+	rm -f MANIFEST.in

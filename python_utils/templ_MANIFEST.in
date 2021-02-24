@@ -1,0 +1,2 @@
+include <<LIB>>/libvoxelize_*pu.so
+graft <<NETWORK_PATH>>
