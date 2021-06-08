@@ -40,6 +40,22 @@ namespace Voxelize {
             case (1) : fct<1>(__VA_ARGS__); break;      \
             case (2) : fct<2>(__VA_ARGS__); break;      \
             case (3) : fct<3>(__VA_ARGS__); break;      \
+            case (4) : fct<4>(__VA_ARGS__); break;      \
+            case (5) : fct<5>(__VA_ARGS__); break;      \
+            case (6) : fct<6>(__VA_ARGS__); break;      \
+            case (7) : fct<7>(__VA_ARGS__); break;      \
+            case (8) : fct<8>(__VA_ARGS__); break;      \
+            case (9) : fct<9>(__VA_ARGS__); break;      \
+            case (10):fct<10>(__VA_ARGS__); break;      \
+            case (11):fct<11>(__VA_ARGS__); break;      \
+            case (12):fct<12>(__VA_ARGS__); break;      \
+            case (13):fct<13>(__VA_ARGS__); break;      \
+            case (14):fct<14>(__VA_ARGS__); break;      \
+            case (15):fct<15>(__VA_ARGS__); break;      \
+            case (16):fct<16>(__VA_ARGS__); break;      \
+            case (17):fct<17>(__VA_ARGS__); break;      \
+            case (18):fct<18>(__VA_ARGS__); break;      \
+            case (19):fct<19>(__VA_ARGS__); break;      \
             default  : std::fprintf(stderr,             \
                        "Dimension %ld not implemented", \
                        globals.dim); std::terminate();  \
