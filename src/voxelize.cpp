@@ -128,6 +128,10 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
                          globals.cpu_queue.size());
     #endif // CPU_ONLY
     #endif // COUNT
+
+    // we need to reset the system to its previous state so subsequent calls
+    // use the same environment variable
+    omp_set_num_threads(globals.Nthreads_tot);
 }// }}}
 
 
