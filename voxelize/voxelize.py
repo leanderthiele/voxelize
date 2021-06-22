@@ -103,21 +103,21 @@ class Voxelize :
         radii = radii.astype(np.float32)
         field = field.astype(np.float32)
 
-        assert(len(radii.shape) == 1)
-        assert(len(coords.shape) == 2 and coords.shape[1]==3)
+        assert len(radii.shape) == 1
+        assert len(coords.shape) == 2 and coords.shape[1]==3
 
         Nparticles = radii.shape[0]
         dim = 1 if len(field.shape) == 1 else field.shape[1]
 
-        assert(coords.shape[0] == Nparticles)
-        assert(field.shape[0] == Nparticles)
+        assert coords.shape[0] == Nparticles
+        assert field.shape[0] == Nparticles
 
         if isinstance(box, int) :
             box_N = box
-            box = np.zeros(box_N*box_N*box_N, dtype=np.float32)
+            box = np.zeros(box_N*box_N*box_N*dim, dtype=np.float32)
         else :
-            assert(len(box.shape) == 3)
-            assert(box.shape[0] == box.shape[1] == box.shape[2])
+            assert (len(box.shape)==3 and dim==1) or (len(box.shape)==4 and box.shape[3]==dim)
+            assert box.shape[0] == box.shape[1] == box.shape[2]
             box_N = box.shape[0]
             box = box.astype(np.float32).flatten()
 
@@ -130,4 +130,4 @@ class Voxelize :
         else :
             Voxelize.__voxelize_cpu(*args)
 
-        return box.reshape((box_N, box_N, box_N))
+        return box.reshape( (box_N, box_N, box_N) if dim==1 else (box_N, box_N, box_N, dim) )
