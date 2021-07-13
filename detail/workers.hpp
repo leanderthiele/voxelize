@@ -5,6 +5,7 @@
 
 #include <queue>
 #include <memory>
+#include <algorithm>
 #include <omp.h>
 
 #ifndef NDEBUG
@@ -77,24 +78,54 @@ add_to_gpu_batch_queue_if_full (std::shared_ptr<gpu_batch_queue_item> &gpu_batch
 static inline float
 exact_overlap (const std::array<float,3> &cub, float R)
 {// {{{
-    Olap::Sphere Sph ( {0.0, 0.0, 0.0}, (Olap::scalar_t)R );
+    const auto cub0 = (Olap::scalar_t)(cub[0]);
+    const auto cub1 = (Olap::scalar_t)(cub[1]);
+    const auto cub2 = (Olap::scalar_t)(cub[2]);
 
-    auto cub0 = (Olap::scalar_t)(cub[0]);
-    auto cub1 = (Olap::scalar_t)(cub[1]);
-    auto cub2 = (Olap::scalar_t)(cub[2]);
+    const Olap::vector_t v0 {cub0, cub1, cub2};
+    const Olap::vector_t v1 {cub0+1.0, cub1, cub2};
+    const Olap::vector_t v2 {cub0+1.0, cub1+1.0, cub2};
+    const Olap::vector_t v3 {cub0, cub1+1.0, cub2};
+    const Olap::vector_t v4 {cub0, cub1, cub2+1.0};
+    const Olap::vector_t v5 {cub0+1.0, cub1, cub2+1.0};
+    const Olap::vector_t v6 {cub0+1.0, cub1+1.0, cub2+1.0};
+    const Olap::vector_t v7 {cub0, cub1+1.0, cub2+1.0};
 
-    Olap::vector_t v0 {cub0, cub1, cub2};
-    Olap::vector_t v1 {cub0+1.0, cub1, cub2};
-    Olap::vector_t v2 {cub0+1.0, cub1+1.0, cub2};
-    Olap::vector_t v3 {cub0, cub1+1.0, cub2};
-    Olap::vector_t v4 {cub0, cub1, cub2+1.0};
-    Olap::vector_t v5 {cub0+1.0, cub1, cub2+1.0};
-    Olap::vector_t v6 {cub0+1.0, cub1+1.0, cub2+1.0};
-    Olap::vector_t v7 {cub0, cub1+1.0, cub2+1.0};
+    const Olap::Hexahedron Hex {v0,v1,v2,v3,v4,v5,v6,v7};
 
-    Olap::Hexahedron Hex {v0,v1,v2,v3,v4,v5,v6,v7};
+    // unfortunately, in rare cases the overlap code encounters
+    // numerical instability.
+    // We have no convenient way to check for this in general,
+    // but we can discard obviously wrong results.
+    // In that case, we try to get around the problem by slightly perturbing
+    // the sphere radius.
+    for (int ii=0; ii != 100; ++ii)
+    {
+        // map 0,1,2,3,... -> 0,-1,+1,-2,+2,-3,+3,...
+        int jj = (ii/2) * ( (ii&1) * 2 - 1 );
 
-    return Olap::overlap(Sph, Hex);
+        // get the slightly perturbed radius.
+        // NOTE that on the first iteration which in almost all cases will be the
+        //      only one jj==0 so no perturbation takes place
+        Olap::scalar_t Rpert = R * (1.0 + jj * 1e-8);
+
+        // now compute the overlap volume
+        Olap::Sphere Sph ( {0.0, 0.0, 0.0}, Rpert );
+        Olap::scalar_t result = Olap::overlap(Sph, Hex);
+
+        // check that the volume is reasonable, return if the case
+        // (otherwise we continue perturbing R)
+        Olap::scalar_t lo = 0.0;
+        Olap::scalar_t hi = std::min(1.0, M_4PI_3 * Rpert * Rpert * Rpert);
+
+        if (result >= lo && result <= hi)
+            return result;
+    }
+
+    // we have failed to compute something reasonable.
+    // We still continue but give the user a warning message
+    std::fprintf(stderr, "WARNING failed to compute exact overlap volume for this configuration, setting to zero.\n");
+    return 0.0F;
 }// }}}
 
 static void
