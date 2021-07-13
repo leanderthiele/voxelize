@@ -1,11 +1,4 @@
 #include "defines.hpp"
-
-// FIXME
-// declare Globals globals before including the headers.
-// Then we can make it static and don't need extern anywhere else.
-//
-// Check that all functions in the header files have static linkage
-
 #include <cassert>
 #include <cstdio>
 #include <iostream>
