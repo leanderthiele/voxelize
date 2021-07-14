@@ -206,7 +206,10 @@ check_cpu_queue ()
 static inline bool
 check_finish ()
 {// {{{
-    if (!globals.workers_finished)
+    #pragma omp atomic read relaxed
+    bool workers_finished = globals.workers_finished;
+
+    if (!workers_finished)
         return false;
 
     bool cpu_queue_empty,
@@ -358,6 +361,7 @@ root_gpu_process ()
     #endif // NDEBUG
     
     #ifdef EXTRA_ROOT_ADD
+    #pragma omp atomic write relaxed
     globals.root_gpu_finished = true;
     #endif // EXTRA_ROOT_ADD
 }// }}}
@@ -372,11 +376,18 @@ root_add_process ()
     #endif // NDEBUG
 
     #ifdef COUNT
-    uint64_t processed_numbers = 0UL;
-    uint64_t processed_chunks = 0UL;
+    uint64_t processed_numbers = 0UL,
+             processed_chunks  = 0UL;
     #endif // COUNT
 
-    bool cpu_queue_empty;
+    // see below -- we are a bit paranoid about the ordering here,
+    // so we make these volatile to prevent reorderings and other optimizations
+    volatile bool cpu_queue_empty;
+    #ifndef CPU_ONLY
+    volatile bool root_gpu_finished;
+    #else // CPU_ONLY
+    volatile bool workers_finished;
+    #endif // CPU_ONLY
 
     while (true)
     {
@@ -386,13 +397,24 @@ root_add_process ()
         check_cpu_queue();
         #endif // COUNT
 
+        // ordering here is important -- there is a bug if e.g. the cpu queue
+        // is empty when checked, then the workers are finished when checked,
+        // but between the two checks they have pushed something to the cpu queue
+        #ifndef CPU_ONLY
+        #pragma omp atomic read relaxed
+        root_gpu_finished = globals.root_gpu_finished;
+        #else // CPU_ONLY
+        #pragma omp atomic read relaxed
+        workers_finished = globals.workers_finished;
+        #endif // CPU_ONLY
+
         #pragma omp critical (CPU_Queue_Critical)
         cpu_queue_empty = globals.cpu_queue.empty();
 
         #ifndef CPU_ONLY
-        if (cpu_queue_empty && globals.root_gpu_finished)
+        if (cpu_queue_empty && root_gpu_finished)
         #else // CPU_ONLY
-        if (cpu_queue_empty && globals.workers_finished)
+        if (cpu_queue_empty && workers_finished)
         #endif // CPU_ONLY
             break;
     }

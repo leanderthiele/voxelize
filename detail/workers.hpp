@@ -303,6 +303,7 @@ workers_process ()
     }// parallel
 
     // we are done and should let the root thread know
+    #pragma omp atomic write relaxed
     globals.workers_finished = true;
 
     #ifdef COUNT
