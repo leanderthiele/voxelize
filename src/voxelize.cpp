@@ -117,6 +117,7 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
                          gpu_process_items,
                          globals.cpu_queue.size());
     assert(globals.gpu_batch_queue.empty());
+    assert(!gpu_process_items);
     #else // CPU_ONLY
     std::fprintf(stderr, "In the end, %lu in cpu_queue\n",
                          globals.cpu_queue.size());

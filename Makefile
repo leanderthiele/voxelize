@@ -25,7 +25,7 @@
 
 EIGEN3:= /usr/include/eigen3
 
-TORCH:= /home/lthiele/pytorch-install
+TORCH:= /home/lthiele/pytorch-src/torch
 CUDA:= /usr/local/cuda-11.0
 CUDNN:= /usr/local/cudnn/cuda-11.0/8.0.2
 

@@ -206,8 +206,10 @@ check_cpu_queue ()
 static inline bool
 check_finish ()
 {// {{{
+    bool workers_finished;
+
     #pragma omp atomic read relaxed
-    bool workers_finished = globals.workers_finished;
+    workers_finished = globals.workers_finished;
 
     if (!workers_finished)
         return false;
