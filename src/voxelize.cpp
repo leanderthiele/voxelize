@@ -110,17 +110,20 @@ voxelize(size_t Nparticles, size_t box_N, size_t dim, float box_L,
     #ifdef COUNT
     #ifndef CPU_ONLY
     size_t gpu_process_items = 0;
-    for (auto x : globals.gpu_process_list)
+    for (const auto &x : globals.gpu_process_list)
         ++gpu_process_items;
     std::fprintf(stderr, "In the end, %lu in gpu_batch_queue, %lu in gpu_process_list, %lu in cpu_queue\n",
                          globals.gpu_batch_queue.size(),
                          gpu_process_items,
                          globals.cpu_queue.size());
+    assert(globals.gpu_batch_queue.empty());
     #else // CPU_ONLY
     std::fprintf(stderr, "In the end, %lu in cpu_queue\n",
                          globals.cpu_queue.size());
     #endif // CPU_ONLY
     #endif // COUNT
+
+    assert(globals.cpu_queue.empty());
 
     // we need to reset the system to its previous state so subsequent calls
     // use the same environment variable
