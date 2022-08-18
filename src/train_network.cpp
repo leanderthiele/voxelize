@@ -31,6 +31,8 @@
 
 #include "network.hpp"
 
+using namespace Voxelize;
+
 bool gpu_avail;
 std::shared_ptr<c10::Device> device_ptr;
 

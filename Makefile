@@ -25,9 +25,9 @@
 
 EIGEN3:= /usr/include/eigen3
 
-TORCH:= /home/lthiele/pytorch-src/torch
-CUDA:= /usr/local/cuda-11.0
-CUDNN:= /usr/local/cudnn/cuda-11.0/8.0.2
+TORCH:= /tigress/lthiele/libtorch_cxx_1.9
+#CUDA:= /usr/local/cuda-11.0
+#CUDNN:= /usr/local/cudnn/cuda-11.0/8.0.2
 
 # only required if you want to build src/example.cpp
 # (and on most systems not at all if the HDF5 libraries and header files
@@ -41,12 +41,12 @@ EXTERN_INCL:= isystem
 
 # you need to edit these if your directory structure is funny
 TORCH_INCL:= -$(EXTERN_INCL) $(TORCH)/include -$(EXTERN_INCL) $(TORCH)/include/torch/csrc/api/include/
-CUDA_INCL:= -$(EXTERN_INCL) $(CUDA)/include
-CUDNN_INCL:= -$(EXTERN_INCL) $(CUDNN)/include
+CUDA_INCL:= -$(EXTERN_INCL) /tigress/lthiele/.conda/envs/torch-env/include
+#CUDNN_INCL:= 
 
 TORCH_LINK:= -L$(TORCH)/lib
-CUDA_LINK:= -L$(CUDA)/lib64
-CUDNN_LINK:= -L$(CUDNN)/lib64
+CUDA_LINK:= -L/tigress/lthiele/.conda/envs/torch-env/lib
+#CUDNN_LINK:= 
 
 CC:= g++
 CCFLAGS:= -std=c++17 -O3 -g3 -ffast-math -Wall -Wextra -D_GLIBCXX_USE_CXX11_ABI=1
@@ -86,7 +86,8 @@ CPU_LINK:= $(OMPFLAG)
 
 GPU_INCL:= $(CPU_INCL) $(TORCH_INCL) $(CUDA_INCL) $(CUDNN_INCL)
 GPU_LINK:= $(CPU_LINK) $(TORCH_LINK) $(CUDA_LINK) $(CUDNN_LINK) \
-           -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart
+           -ltorch -ltorch_cpu -ltorch_cuda -lc10 -lc10_cuda -lcudart \
+           -lcudnn -lnccl -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core
 
 # dependencies
 VOXELIZE_CPU_DEP:= $(SRC)/voxelize.cpp $(INCLUDE)/voxelize_cpu.hpp \

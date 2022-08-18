@@ -24,9 +24,11 @@
 #   error "please define OUTPUTS_PATH from compiler"
 #endif // OUTPUTS_PATH
 
+using namespace Voxelize;
+
 static constexpr size_t Nsamples = 1 << 26;
 static constexpr float  Rmin     = 0.01;
-static constexpr float  Rmax     = 10.0;
+static constexpr float  Rmax     = 100.0;
 
 std::vector<float> inputs;
 std::vector<float> outputs;

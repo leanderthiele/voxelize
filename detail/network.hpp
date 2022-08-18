@@ -25,7 +25,7 @@ struct Net
     static constexpr size_t netw_item_size = 8;
 
     // number of hidden layers
-    static constexpr size_t Nhidden = 4;
+    static constexpr size_t Nhidden = 5;
 
     // number of neurons in a layer
     static constexpr size_t Nneurons = 32;
